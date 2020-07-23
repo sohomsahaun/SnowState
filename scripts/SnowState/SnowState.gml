@@ -5,7 +5,6 @@
 *	Constructor(s):
 *		> StateMachine(initial_state, [state_name, state_struct])
 *			- add(state, state_struct)
-*			- set_default(state, [perf])
 *			- enter()
 *			- step()
 *			- draw()
@@ -26,7 +25,7 @@
 
 /// @func	  StateMachine(initial_state, [state_name, state_struct])
 /// @param	  {string} initial_state			Initial state for the state machine
-/// @param	  {string} [state					Unique identifier for the state
+/// @param	  {string} [state					Name for the state
 /// @param	  {struct} state_struct]			Struct { enter | step | draw | leave }
 function StateMachine(_state) constructor {
 	#region System
@@ -95,7 +94,7 @@ function StateMachine(_state) constructor {
 	#endregion
 	
 	/// @func		add(state, state_struct)
-	/// @param		{string} state				Unique identifier for the state
+	/// @param		{string} state				Name for the state
 	/// @param		{struct} state_struct		Struct { enter | step | draw | leave }
 	/// @returns	N/A
 	static add = function(_name, _struct) {
