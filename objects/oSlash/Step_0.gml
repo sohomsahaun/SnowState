@@ -8,7 +8,7 @@ if (_num) {
 		var _inst = _list[| i];
 		if (ds_list_find_index(hitList, _inst) != -1) continue;
 		
-		_inst.hit(1, (x > other.x)*2-1);
+		_inst.hit(1, (x > owner.x)*2-1);
 		ds_list_add(hitList, _inst);
 	}
 }

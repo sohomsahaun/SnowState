@@ -102,6 +102,7 @@ state = new StateMachine("idle",
 			
 			var _slash = instance_create_depth(x, y-sprite_yoffset, depth, oSlash);
 			_slash.image_xscale = image_xscale;
+			_slash.owner = id;
 		},
 		step: function() {
 			if (animation_end()) state_switch("idle");

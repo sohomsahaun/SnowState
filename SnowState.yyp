@@ -8,7 +8,7 @@
     {"id":{"name":"oTreasure","path":"objects/oTreasure/oTreasure.yy",},"order":3,},
     {"id":{"name":"oWall","path":"objects/oWall/oWall.yy",},"order":4,},
     {"id":{"name":"rDemo","path":"rooms/rDemo/rDemo.yy",},"order":0,},
-    {"id":{"name":"StateMachine","path":"scripts/StateMachine/StateMachine.yy",},"order":0,},
+    {"id":{"name":"SnowState","path":"scripts/SnowState/SnowState.yy",},"order":0,},
     {"id":{"name":"Utility","path":"scripts/Utility/Utility.yy",},"order":1,},
     {"id":{"name":"sBackCloud","path":"sprites/sBackCloud/sBackCloud.yy",},"order":0,},
     {"id":{"name":"sDecorationTile","path":"sprites/sDecorationTile/sDecorationTile.yy",},"order":0,},

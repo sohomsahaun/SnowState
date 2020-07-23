@@ -1,5 +1,4 @@
 {
-  "name": "tDecoration",
   "spriteId": {
     "name": "sDecorationTile",
     "path": "sprites/sDecorationTile/sDecorationTile.yy",
@@ -45,6 +44,7 @@
     "path": "folders/Tile Sets.yy",
   },
   "resourceVersion": "1.0",
+  "name": "tDecoration",
   "tags": [],
   "resourceType": "GMTileSet",
 }

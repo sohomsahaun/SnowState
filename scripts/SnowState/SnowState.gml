@@ -3,7 +3,7 @@
 *
 *
 *	Constructor(s):
-*		> StateMachine(initial_state)
+*		> StateMachine(initial_state, [state_name, state_struct])
 *			- add(state, state_struct)
 *			- set_default(state, [perf])
 *			- enter()
