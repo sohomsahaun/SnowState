@@ -82,7 +82,7 @@ state = new StateMachine("walk",
 		enter: function() {
 			sprite_index = sSnakeHit;
 			image_index = 0;
-			hspd = spd*hitDir;
+			hspd = spd * hitDir;
 		},
 		step: function() {
 			if (hspd != 0) hspd = approach(hspd, 0, hitAcc);

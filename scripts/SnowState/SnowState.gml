@@ -2,7 +2,7 @@
 *	SnowState | v1.0.0
 *
 *
-*	Constructor(s):
+*	Struct(s):
 *		> StateMachine(initial_state, [state_name, state_struct])
 *			- add(state, state_struct)
 *			- enter()
@@ -178,13 +178,7 @@ function state_switch(_state, _perf, _leave, _enter) {
 /// @param		{real} id					Instance ID
 /// @returns	{string/undefined}			Current state for an instance
 function get_current_state(_id) {
-	if (0) return argument[0];
-	
-	if (_id == undefined) _id = id;
-	if (!variable_instance_exists(_id, "__stateStruct__")) {
-		var _message = "State Machine doesn't exist for " + string(object_get_name(other.object_index)) + ".";
-		show_error(_message, true);
-	}
+	if (!variable_instance_exists(_id, "__stateStruct__")) return undefined;
 	return _id.__stateStruct__.currState;
 }
 
@@ -192,12 +186,6 @@ function get_current_state(_id) {
 /// @param		{real} id					Instance ID
 /// @returns	{string/undefined}			Previous state for an instance
 function get_previous_state(_id) {
-	if (0) return argument[0];
-	
-	if (_id == undefined) _id = id;
-	if (!variable_instance_exists(_id, "__stateStruct__")) {
-		var _message = "State Machine doesn't exist for " + string(object_get_name(other.object_index)) + ".";
-		show_error(_message, true);
-	}
+	if (!variable_instance_exists(_id, "__stateStruct__")) return undefined;
 	return _id.__stateStruct__.prevState;
 };
