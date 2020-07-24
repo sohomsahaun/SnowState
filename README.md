@@ -4,7 +4,7 @@
 
 ---
 
-**SnowState** is a robust finite state machine for GameMaker Studio 2.3+. It's easy to set up and keeps the code neat and organized.
+**SnowState** is a robust finite state machine for GameMaker Studio 2.3+. It's easy to set up and keeps the code neat and organized. No more managing a thousand different scripts for an object, it's all in one place!
 
 You only need the `SnowState` script for your game. This repository contains a demo project demonstrating the basics of SnowState.
 
