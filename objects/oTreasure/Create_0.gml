@@ -8,7 +8,7 @@ arrowImgSpd = .1;
 
 // Functions
 interact = function() {
-	var _state = get_current_state();
+	var _state = get_current_state(id);
 	if (_state == "closed")	state_switch("opened");
 		else if (_state == "opened") state_switch("empty");	
 }
