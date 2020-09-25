@@ -123,6 +123,7 @@ function StateMachine(_state) constructor {
 	/// @func		step()
 	/// @returns	N/A
 	static step = function() {
+		++stateTimer;
 		__execute(1);
 	};
 	
