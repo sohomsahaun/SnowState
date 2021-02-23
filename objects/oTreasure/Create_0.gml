@@ -8,15 +8,16 @@ arrowImgSpd = .1;
 
 // Functions
 interact = function() {
-	var _state = get_current_state(id);
-	if (_state == "closed")	state_switch("opened");
-		else if (_state == "opened") state_switch("empty");	
+	var _state = state.get_current_state();
+	if (_state == "closed")	state.change("opened");
+		else if (_state == "opened") state.change("empty");	
 }
 
 // State Machine
-state = new StateMachine("closed",
-	
-	"closed", {
+state = new SnowState("closed");
+
+state
+	.add("closed", {
 		enter: function() {
 			image_index = 0;
 		},
@@ -27,9 +28,9 @@ state = new StateMachine("closed",
 			} else arrowImg = 0;
 			draw_self();
 		}
-	},
+	})
 	
-	"opened", {
+	.add("opened", {
 		enter: function() {
 			image_index = 1;	
 		},
@@ -40,11 +41,10 @@ state = new StateMachine("closed",
 			} else arrowImg = 0;
 			draw_self();
 		}
-	},
+	})
 	
-	"empty", {
+	.add("empty", {
 		enter: function() {
 			image_index	= 2;
 		}
-	}
-);
+	});

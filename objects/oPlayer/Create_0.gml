@@ -52,9 +52,13 @@ check_treasure = function() {
 }
 
 // State Machine
-state = new StateMachine("idle",
 
-	"idle", {
+state = new SnowState("idle");
+
+state
+	.history_enable()
+	.set_history_max_size(15)
+	.add("idle", {
 		enter: function() {
 			sprite_index = sPlayerIdle;
 			image_index = 0;
@@ -63,37 +67,58 @@ state = new StateMachine("idle",
 		},
 		step: function() {
 			var _hdir = keyboard_check(controls.right) - keyboard_check(controls.left);
-			if (abs(_hdir)) state_switch("walk");
+			if (abs(_hdir)) state.change("walk");
 			
-			if (keyboard_check_pressed(controls.jump)) state_switch("rising");
+			if (keyboard_check_pressed(controls.jump)) {
+				state.change("rising");
+				return;
+			}
+			
 			apply_gravity();
 			
-			if (keyboard_check_pressed(controls.attack)) state_switch("attack");
+			if (keyboard_check_pressed(controls.attack)) {
+				state.change("attack");
+				return;
+			}
 			
-			if (keyboard_check_pressed(controls.interact)) check_treasure();
+			if (keyboard_check_pressed(controls.interact)) {
+				check_treasure();
+				return;
+			}
 		}
-	},
-	
-	"walk", {
+	})
+	.add("walk", {
 		enter: function() {
 			sprite_index = sPlayerWalk;
 			image_index = 0;
 		},
 		step: function() {
 			var _hdir = keyboard_check(controls.right) - keyboard_check(controls.left);
-			if (abs(_hdir)) image_xscale = _hdir;
-				else state_switch("idle");
+			
+			if (abs(_hdir)) {
+				image_xscale = _hdir;
+			} else {
+				state.change("idle");
+			}
+			
 			hspd = _hdir * spd;
 			
-			if (keyboard_check_pressed(controls.jump)) state_switch("rising");
-			if (!on_ground()) state_switch("falling");
+			if (keyboard_check_pressed(controls.jump)) {
+				state.change("rising");
+				return;
+			}
+			
+			if (!on_ground()) {
+				state.change("falling");
+				return;
+			}
+			
 			apply_gravity();
 			
-			if (keyboard_check_pressed(controls.attack)) state_switch("attack");
+			if (keyboard_check_pressed(controls.attack)) state.change("attack");
 		}
-	},
-	
-	"attack", {
+	})
+	.add("attack", {
 		enter: function() {
 			sprite_index = sPlayerSlash;
 			image_index = 0;
@@ -105,11 +130,12 @@ state = new StateMachine("idle",
 			_slash.owner = id;
 		},
 		step: function() {
-			if (animation_end()) state_switch("idle");
+			if (animation_end()) {
+				state.change("idle");
+			}
 		}
-	},
-	
-	"rising", {
+	})
+	.add("rising", {
 		enter: function() {
 			sprite_index = sPlayerRising;	
 			image_index = 0;
@@ -122,14 +148,19 @@ state = new StateMachine("idle",
 			
 			if (keyboard_check_pressed(controls.jump) && airjump) {
 				airjump = 0;
-				state_switch("rising");
+				state.change("rising");
+				return;
 			}
+			
 			apply_gravity();
-			if (vspd >= 0) state_switch("falling");
+			
+			if (vspd >= 0) {
+				state.change("falling");
+				return;
+			}
 		}
-	},
-	
-	"falling", {
+	})
+	.add("falling", {
 		enter: function() {
 			sprite_index = sPlayerFalling;
 			image_index = 0;
@@ -141,14 +172,18 @@ state = new StateMachine("idle",
 			
 			if (keyboard_check_pressed(controls.jump) && airjump) {
 				airjump = 0;
-				state_switch("rising");
+				state.change("rising");
+				return;
 			}
+			
 			apply_gravity();
 			
 			// Enable airjump only when falling to the ground
-			if (on_ground()) state_switch("idle", true, function() {
-				airjump = 1;	
-			});
+			if (on_ground()) {
+				state.change("idle", function() {
+					airjump = 1;	
+				});
+				return;
+			}
 		}
-	}
-);
+	});

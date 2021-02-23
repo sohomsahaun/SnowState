@@ -6,7 +6,7 @@
     "path": "folders/SnowState.yy",
   },
   "resourceVersion": "1.0",
-  "name": "SnowState",
+  "name": "__snowstate_config",
   "tags": [],
   "resourceType": "GMScript",
 }

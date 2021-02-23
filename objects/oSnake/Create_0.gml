@@ -47,13 +47,14 @@ apply_gravity = function() {
 hit = function(_damage, _direction) {
 	hp -= _damage;
 	hitDir = _direction;
-	state_switch("hit");	
+	state.change("hit");	
 };
 
 // State Machine
-state = new StateMachine("walk",
-	
-	"walk", {
+state = new SnowState("walk");
+
+state
+	.add("walk", {
 		enter: function() {
 			sprite_index = sSnakeWalk;
 			image_index = 0;
@@ -62,11 +63,11 @@ state = new StateMachine("walk",
 		step: function() {
 			if (place_meeting(x+hspd, y, oWall) || (!place_meeting(x+sprite_width/2, y+1, oWall))) flip();
 			if (on_ground()) move_and_collide();
-				else state_switch("falling");
+				else state.change("falling");
 		}
-	},
+	})
 	
-	"falling", {
+	.add("falling", {
 		enter: function() {
 			sprite_index = sSnakeFall;
 			image_index = 0;
@@ -74,19 +75,23 @@ state = new StateMachine("walk",
 		},
 		step: function() {
 			apply_gravity();
-			if (on_ground()) state_switch("walk");	
+			if (on_ground()) state.change("walk");	
 		}
-	},
+	})
 	
-	"hit", {
+	.add("hit", {
 		enter: function() {
 			sprite_index = sSnakeHit;
 			image_index = 0;
 			hspd = spd * hitDir;
 		},
 		step: function() {
-			if (hspd != 0) hspd = approach(hspd, 0, hitAcc);
-				else state_switch("walk");
+			if (hspd != 0) {
+				hspd = approach(hspd, 0, hitAcc);
+			} else {
+				state.change("walk");
+				return;
+			}
 			if (place_meeting(x+hspd, y, oWall)) flip();
 			move_and_collide();
 		},
@@ -95,5 +100,4 @@ state = new StateMachine("walk",
 			draw_healthbar(x-_ww, y-_hh, x+_ww, y-_hh+_height, (hp/hpMax)*100, c_black, c_red, c_green, 0, true, true);
 			draw_self();
 		}
-	}
-);
+	});
