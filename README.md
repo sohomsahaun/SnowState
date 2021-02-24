@@ -18,4 +18,4 @@ You can find downloadable .yyz (project file with demo) and .yymps (SnowState on
 &nbsp;
 
 ## Documentation
-To know the available functions/structs and their usage, visit the [Wiki](https://github.com/sohomsahaun/SnowState/wiki)!
+To know more about SnowState, please visit the [Wiki](https://github.com/sohomsahaun/SnowState/wiki)!
