@@ -6,7 +6,7 @@
 
 **SnowState** is a robust finite state machine for GameMaker Studio 2.3+. It's easy to set up and keeps the code neat and organized. No more managing a thousand different scripts for an object, it's all in one place!
 
-You can find downloadable yyz and yymps in the [Releases](https://github.com/sohomsahaun/SnowState/releases) tab.
+You can find downloadable .yyz (project file with demo) and .yymps (SnowState only) in the [Releases](https://github.com/sohomsahaun/SnowState/releases) tab.
 
 &nbsp;
 
