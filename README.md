@@ -19,3 +19,6 @@ You can find downloadable .yyz (project file with demo) and .yymps (SnowState on
 
 ## Documentation
 To know more about SnowState, please visit the [Wiki](https://github.com/sohomsahaun/SnowState/wiki)!
+
+## Note
+SnowState 2.0.0 is for GameMaker Studio 2.3.2 or higher. If you are using earlier version(s) of GameMaker Studio, please check out earlier version(s) of SnowState.
