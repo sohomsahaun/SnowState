@@ -1,4 +1,4 @@
-<h1 align="center">SnowState 2.0.0</h1>
+<h1 align="center">SnowState 2.1.0</h1>
 <p align="center">@sohomsahaun</p>
 <p align="center">Quick links: <a href="https://sahaun.itch.io/snowstate">itch</a></p>
 
@@ -21,4 +21,4 @@ You can find downloadable .yyz (project file with demo) and .yymps (SnowState on
 To know more about SnowState, please visit the [Wiki](https://github.com/sohomsahaun/SnowState/wiki)!
 
 ## Note
-SnowState 2.0.0 is for GameMaker Studio 2.3.2 or higher. If you are using earlier version(s) of GameMaker Studio, please check out earlier version(s) of SnowState.
+This version of SnowState is for GameMaker Studio 2.3.2 or higher. If you are using earlier version(s) of GameMaker Studio, please check out earlier version(s) of SnowState.
