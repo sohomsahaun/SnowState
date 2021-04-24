@@ -1,5 +1,5 @@
 /**
-*	SnowState | v2.0.0
+*	SnowState | v2.1.0
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki
 *
 *	Author: Sohom Sahaun | @sohomsahaun
@@ -16,66 +16,127 @@ function SnowState(_initState) constructor {
 	__this = {
 		owner			: _owner,
 		states			: {},
-		stateTimer		: 0,
+		stateStartTime	: get_timer(),
 		initState		: _initState,
 		execEnter		: _execEnter,
 		history			: [],
 		historyMaxSize	: max(1, SNOWSTATE_DEFAULT_HISTORY_MAX_SIZE),
 		historyEnabled	: SNOWSTATE_HISTORY_ENABLED,
+		defaultEvents	: {
+			enter: function() {},
+			leave: function() {}
+		}
 	};
 	
-	static __snowstate_error = function() {
+	__snowstate_error = function() {
 		var _str = "SnowState Error:\n";
 		var _i = 0; repeat(argument_count) {
 			_str += string(argument[_i++]);	
 		}
 		show_error(_str, true);
-	}
+	};
 	
-	static __snowstate_trace = function() {
+	__snowstate_trace = function() {
 		var _str = "[SnowState] ";
 		var _i = 0; repeat(argument_count) {
 			_str += string(argument[_i++]);	
 		}
 		show_debug_message(_str);
-	}
+	};
 	
-	static __is_state_defined = function(_state) {
+	__is_state_defined = function(_state) {
 		return (is_string(_state) && variable_struct_exists(__this.states, _state));
 	};
 	
-	static __fill_state_struct = function(_struct) {
-		if (!variable_struct_exists(_struct, "enter")) _struct.enter = function() {};
-		if (!variable_struct_exists(_struct, "step") ) _struct.step  = function() {};
-		if (!variable_struct_exists(_struct, "draw") ) _struct.draw  = function() { draw_self(); };
-		if (!variable_struct_exists(_struct, "leave")) _struct.leave = function() {};	
-		return _struct;
+	__assert_event_name_valid = function(_event) {
+		if (variable_struct_exists(__this.defaultEvents, _event)) return true;
+		if (variable_struct_exists(self, _event)) {
+			__snowstate_error("Can not use \"", _event, "\" as an event.");
+			return false;
+		}
+		return true;
 	};
 	
-	static __create_events_array = function(_struct) {
-		var _events = array_create(__SNOWSTATE_EVENT.SIZE__);
-		_events[@ __SNOWSTATE_EVENT.ENTER] = method(__this.owner, _struct.enter);
-		_events[@ __SNOWSTATE_EVENT.STEP ] = method(__this.owner, _struct.step );
-		_events[@ __SNOWSTATE_EVENT.DRAW ] = method(__this.owner, _struct.draw );
-		_events[@ __SNOWSTATE_EVENT.LEAVE] = method(__this.owner, _struct.leave);
+	__add_event_method = function(_event) {
+		var _temp = {
+			exec: __execute,
+			event: _event
+		};
+		self[$ _event] = method(_temp, function() {
+			exec(event);
+		});
+		return self;
+	};
+	
+	__set_default_event = function(_event, _method) {
+		__this.defaultEvents[$ _event] = _method;
+		__add_event_method(_event);
+		return self;
+	};
+	
+	__assert_event_available = function(_event) {
+		if (!variable_struct_exists(__this.defaultEvents, _event)) {
+			__set_default_event(_event, function() {});
+		}
+		return self;
+	};
+	
+	__create_events_struct = function(_struct) {
+		var _events = {};
+		var _arr, _i, _event;
+		
+		_arr = variable_struct_get_names(_struct);
+		_i = 0; repeat(array_length(_arr)) {
+			_event = _arr[@ _i];
+			__assert_event_name_valid(_event);
+			__assert_event_available(_event);
+			_events[$ _event] = method(__this.owner, _struct[$ _event]);
+			++_i;
+		}
+		
+		_arr = variable_struct_get_names(__this.defaultEvents);
+		_i = 0; repeat(array_length(_arr)) {
+			_event = _arr[@ _i];
+			if (!variable_struct_exists(_struct, _event)) {
+				_events[$ _event] = method(__this.owner, __this.defaultEvents[$ _event]);
+			}
+			++_i;
+		}
+		
 		return _events;
 	};
 	
-	static __get_events_array = function(_state) {
-		return __this.states[$ _state];
+	__update_states = function() {
+		var _state, _event, _states, _events, _i, _j;
+		_states = variable_struct_get_names(__this.states);
+		_events = variable_struct_get_names(__this.defaultEvents);
+		
+		_i = 0; repeat(array_length(_states)) {
+			_state = __this.states[$ _states[@ _i]];
+			_j = 0; repeat(array_length(_events)) {
+				_event = _events[@ _j];
+				if (!variable_struct_exists(_state, _event)) {
+					_state[$ _event] = __this.defaultEvents[$ _event];
+				}
+				++_j;
+			}
+			++_i;
+		}
+		
+		return self;
 	};
 	
-	static __history_fit_contents = function() {
+	__history_fit_contents = function() {
 		array_resize(__this.history, min(array_length(__this.history), __this.historyMaxSize));
 		return self;
 	};
 	
-	static __history_resize = function(_size) {
+	__history_resize = function(_size) {
 		__this.historyMaxSize = _size;
 		__history_fit_contents();
 	};
 	
-	static __history_add = function(_state) {
+	__history_add = function(_state) {
 		if (__this.historyEnabled) {
 			array_insert(__this.history, 0, _state);
 			__history_fit_contents();
@@ -85,50 +146,38 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
-	static __execute = function(_event) {
+	__execute = function(_event) {
 		var _state = __this.history[@ 0];
 		if (!__is_state_defined(_state)) {
 			__snowstate_error("State \"", _state, "\" is not defined.");
 			return undefined;
 		}
-		if (!__is_state_defined(_state)) {
-			
-		}
-		__get_events_array(_state)[@ _event]();
+		__this.states[$ _state][$ _event]();
 		return self;
 	};
 	
-	static __switch = function(_state, _leave, _enter) {
-		__this.stateTimer = 0;
+	__change = function(_state, _leave, _enter) {
+		__this.stateStartTime = get_timer();
+		
 		_leave();
 		__history_add(_state);
 		_enter();
+		
 		return self;
 	};
 	#endregion
 	
-	static enter = function() {
-		__execute(__SNOWSTATE_EVENT.ENTER);
+	enter = function() {
+		__execute("enter");
 		return self;
 	};
 	
-	static step = function() {
-		++__this.stateTimer;
-		__execute(__SNOWSTATE_EVENT.STEP);
+	leave = function() {
+		__execute("leave");
 		return self;
 	};
 	
-	static draw = function() {
-		__execute(__SNOWSTATE_EVENT.DRAW);
-		return self;
-	};
-	
-	static leave = function() {
-		__execute(__SNOWSTATE_EVENT.LEAVE);
-		return self;
-	};
-	
-	static add = function(_name, _struct) {
+	add = function(_name, _struct) {
 		if (!is_string(_name) || (_name == "")) {
 			__snowstate_error("State name should be a non-empty string.");
 			return undefined;
@@ -144,7 +193,8 @@ function SnowState(_initState) constructor {
 			return undefined;
 		}
 		
-		__this.states[$ _name] = __create_events_array(__fill_state_struct(_struct));
+		__this.states[$ _name] = __create_events_struct(_struct);
+		__update_states();
 		
 		if (_name == __this.initState) {
 			if (__this.execEnter) enter();
@@ -153,7 +203,7 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
-	static change = function(_state, _leave, _enter) {
+	change = function(_state, _leave, _enter) {
 		if (_leave == undefined) _leave = -1;
 		if (_enter == undefined) _enter = -1;
 		
@@ -173,15 +223,36 @@ function SnowState(_initState) constructor {
 			_enter = enter;
 		}
 		
-		__switch(_state, _leave, _enter);
+		return __change(_state, _leave, _enter);
+	};
+	
+	event_set_default_function = function(_event, _function) {
+		if (SNOWSTATE_DEBUG_WARNING && (variable_struct_names_count(__this.states) > 0)) {
+			__snowstate_trace("event_set_default_function() should be called before defining any state.");
+		}
+		
+		if (!is_string(_event) || (_event == "")) {
+			__snowstate_error("Event should be a non-empty string.");
+			return undefined;
+		}
+		
+		if (!is_method(_function)) {
+			__snowstate_error("Default function should be a function.");
+			return undefined;
+		}
+		
+		__assert_event_name_valid(_event);
+		__set_default_event(_event, method(__this.owner, _function));
+		__update_states();
+		
 		return self;
 	};
 	
-	static history_is_enabled = function() {
+	history_is_enabled = function() {
 		return __this.historyEnabled;
 	};
 	
-	static history_enable = function() {
+	history_enable = function() {
 		if (!__this.historyEnabled) {
 			__this.historyEnabled = true;
 			__history_resize(__this.historyMaxSize);
@@ -189,7 +260,7 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
-	static history_disable = function() {
+	history_disable = function() {
 		if (__this.historyEnabled) {
 			__this.historyEnabled = false;
 			array_resize(__this.history, 1);
@@ -197,10 +268,10 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
-	static get_history = function() {
+	get_history = function() {
 		if (!__this.historyEnabled) {
 			if (SNOWSTATE_DEBUG_WARNING) {
-				__snowstate_trace("History is disabled, can not get history.");	
+				__snowstate_trace("History is disabled, can not get_history().");	
 			}
 			return [];
 		}
@@ -210,7 +281,7 @@ function SnowState(_initState) constructor {
 		return _arr;
 	};
 	
-	static set_history_max_size = function(_size) {
+	set_history_max_size = function(_size) {
 		if (!is_real(_size)) {
 			__snowstate_error("Size should be a number.");
 			return undefined;
@@ -225,15 +296,15 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
-	static get_history_max_size = function() {
+	get_history_max_size = function() {
 		return __this.historyMaxSize;	
 	};
 	
-	static get_current_state = function() {
+	get_current_state = function() {
 		return ((array_length(__this.history) > 0) ? __this.history[@ 0] : "");
 	};
 	
-	static get_previous_state = function() {
+	get_previous_state = function() {
 		if (!__this.historyEnabled) {
 			if (SNOWSTATE_DEBUG_WARNING) {
 				__snowstate_trace("History is disabled, can not get previous state.");	
@@ -243,8 +314,10 @@ function SnowState(_initState) constructor {
 		return ((array_length(__this.history) > 1) ? __this.history[@ 1] : "");
 	};
 	
-	static get_time = function() {
-		return __this.stateTimer;
+	get_time = function(_seconds) {
+		if (_seconds == undefined) _seconds = false;
+		var _factor = _seconds ? 1/1000000 : game_get_speed(gamespeed_fps)/1000000;
+		return floor((get_timer()-__this.stateStartTime) * _factor);
 	};
 	
 	// Initialization
@@ -258,11 +331,7 @@ function SnowState(_initState) constructor {
 }
 
 
-#macro SNOWSTATE_VERSION "2.0.0"
-#macro SNOWSTATE_DATE "23-02-2021"
-enum __SNOWSTATE_EVENT {
-	ENTER, STEP, DRAW, LEAVE,
-	SIZE__
-}
+#macro SNOWSTATE_VERSION "2.1.0"
+#macro SNOWSTATE_DATE "24-04-2021"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");

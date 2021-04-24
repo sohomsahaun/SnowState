@@ -67,7 +67,11 @@ state
 		},
 		step: function() {
 			var _hdir = keyboard_check(controls.right) - keyboard_check(controls.left);
-			if (abs(_hdir)) state.change("walk");
+			
+			if (abs(_hdir)) {
+				state.change("walk");
+				return;
+			}
 			
 			if (keyboard_check_pressed(controls.jump)) {
 				state.change("rising");
@@ -99,6 +103,7 @@ state
 				image_xscale = _hdir;
 			} else {
 				state.change("idle");
+				return;
 			}
 			
 			hspd = _hdir * spd;
@@ -115,7 +120,10 @@ state
 			
 			apply_gravity();
 			
-			if (keyboard_check_pressed(controls.attack)) state.change("attack");
+			if (keyboard_check_pressed(controls.attack)) {
+				state.change("attack");
+				return;
+			}
 		}
 	})
 	.add("attack", {
@@ -132,6 +140,7 @@ state
 		step: function() {
 			if (animation_end()) {
 				state.change("idle");
+				return;
 			}
 		}
 	})
@@ -186,4 +195,4 @@ state
 				return;
 			}
 		}
-	});
+	})
