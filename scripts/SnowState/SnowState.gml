@@ -213,7 +213,10 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
-	change = function(_state, _leave = -1, _enter = -1) {
+	change = function(_state, _leave, _enter) {
+		if (_leave == undefined) _leave = -1;
+		if (_enter == undefined) _enter = -1;
+		
 		if (!__this.is_really_a_method(_leave)) {
 			if (_leave != -1) {
 				__this.snowstate_error("Invalid command \"", _leave, "\" in change().");
@@ -321,7 +324,8 @@ function SnowState(_initState) constructor {
 		return ((array_length(__this.history) > 1) ? __this.history[@ 1] : "");
 	};
 	
-	get_time = function(_seconds = false) {
+	get_time = function(_seconds) {
+		if (_seconds == undefined) _seconds = false;
 		var _factor = _seconds ? 1/1000000 : game_get_speed(gamespeed_fps)/1000000;
 		return floor((get_timer()-__this.stateStartTime) * _factor);
 	};
