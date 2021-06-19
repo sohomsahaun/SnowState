@@ -52,7 +52,6 @@ check_treasure = function() {
 }
 
 // State Machine
-
 state = new SnowState("idle");
 
 state

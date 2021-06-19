@@ -1,6 +1,5 @@
-<h1 align="center">SnowState 2.1.1</h1>
+<h1 align="center">SnowState 2.2.0</h1>
 <p align="center">@sohomsahaun</p>
-<p align="center">Quick links: <a href="https://sahaun.itch.io/snowstate">itch</a></p>
 
 ---
 
