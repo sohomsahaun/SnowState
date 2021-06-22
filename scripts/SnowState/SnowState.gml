@@ -1,5 +1,5 @@
 /**
-*	SnowState | v2.2.0
+*	SnowState | v2.2.1
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki
 *
 *	Author: Sohom Sahaun | @sohomsahaun
@@ -8,8 +8,17 @@
 /// @func SnowState(initial_state, [execute_enter])
 /// @param {string} initial_state		Initial state for the state machine
 /// @param {bool}	[execute_enter]		Whether to execute the "enter" event for the initial state (true) or not (false) [Default: true]
-function SnowState(_initState) constructor {	
-	#region System
+function SnowState(_initState) constructor {
+	
+	#region SnowState System
+	
+	enum SNOWSTATE_EVENT {
+		NOT_DEFINED	= 0,
+		DEFINED		= 1,
+		INHERITED	= 2,
+		DEFAULT		= 4,
+	}
+	
 	var _execEnter = (argument_count > 1) ? argument[1] : true;
 	var _owner = other;
 	
@@ -28,49 +37,15 @@ function SnowState(_initState) constructor {
 		historyMaxSize	= max(1, SNOWSTATE_DEFAULT_HISTORY_MAX_SIZE);
 		historyEnabled	= SNOWSTATE_HISTORY_ENABLED;
 		defaultEvents	= {
-			enter: function() {},
-			leave: function() {}
+			enter: {
+				exists: SNOWSTATE_EVENT.NOT_DEFINED,
+				func: function() {}
+			},
+			leave: {
+				exists: SNOWSTATE_EVENT.NOT_DEFINED,
+				func: function() {}
+			},
 		};
-		
-		is_really_a_method = method(other, function(_method) {
-			try {
-				return is_method(method(undefined, _method));
-			} catch (_e) {
-				return false;	
-			}
-		});
-		
-		snowstate_error = method(other, function() {
-			var _str = "[SnowState]\n";
-			var _i = 0; repeat(argument_count) {
-				_str += string(argument[_i++]);	
-			}
-			_str += "\n\n\n";
-			show_error(_str, true);
-		});
-	
-		snowstate_trace = method(other, function() {
-			var _str = "[SnowState] ";
-			var _i = 0; repeat(argument_count) {
-				_str += string(argument[_i++]);	
-			}
-			show_debug_message(_str);
-		});
-	
-		is_state_defined = method(other, function(_state) {
-			return (is_string(_state) && variable_struct_exists(__this.states, _state));
-		});
-	
-		assert_event_name_valid = method(other, function(_event) {
-			with (__this) {
-				if (variable_struct_exists(defaultEvents, _event)) return true;
-				if (variable_struct_exists(other, _event)) {
-					snowstate_error("Can not use \"", _event, "\" as an event.");
-					return false;
-				}
-			}
-			return true;
-		});
 		
 		add = method(other, function(_name, _struct, _hasParent) {
 			if (_hasParent == undefined) _hasParent = false;
@@ -102,7 +77,10 @@ function SnowState(_initState) constructor {
 					_events = variable_struct_get_names(_struct);
 					_i = 0; repeat (array_length(_events)) {
 						_event = _events[@ _i];
-						_state[$ _event] = method(owner, _struct[$ _event]);
+						_state[$ _event] = {
+							exists: SNOWSTATE_EVENT.DEFINED,
+							func: method(owner, _struct[$ _event])
+						};
 						++_i;
 					}
 				}
@@ -119,7 +97,7 @@ function SnowState(_initState) constructor {
 	
 		add_event_method = method(other, function(_event) {
 			var _temp = {
-				exec: __this.execute,
+				exec : __this.execute,
 				event: _event
 			};
 			self[$ _event] = method(_temp, function() {
@@ -128,134 +106,26 @@ function SnowState(_initState) constructor {
 			return self;
 		});
 	
-		set_default_event = method(other, function(_event, _method) {
-			with (__this) {
-				defaultEvents[$ _event] = _method;
-				add_event_method(_event);
-			}
-			return self;
-		});
-	
 		assert_event_available = method(other, function(_event) {
 			with (__this) {
 				if (!variable_struct_exists(defaultEvents, _event)) {
-					set_default_event(_event, function() {});
+					set_default_event(_event, function() {}, SNOWSTATE_EVENT.NOT_DEFINED);
 				}
 			}
 			return self;
 		});
 	
-		create_events_struct = method(other, function(_struct) {
-			var _events = {};
-			var _arr, _i, _event;
-			
+		assert_event_name_valid = method(other, function(_event) {
 			with (__this) {
-				_arr = variable_struct_get_names(_struct);
-				_i = 0; repeat(array_length(_arr)) {
-					_event = _arr[@ _i];
-					assert_event_name_valid(_event);
-					assert_event_available(_event);
-					_events[$ _event] = method(owner, _struct[$ _event]);
-					++_i;
-				}
-		
-				_arr = variable_struct_get_names(defaultEvents);
-				_i = 0; repeat(array_length(_arr)) {
-					_event = _arr[@ _i];
-					if (!variable_struct_exists(_struct, _event)) {
-						_events[$ _event] = method(owner, defaultEvents[$ _event]);
-					}
-					++_i;
+				if (variable_struct_exists(defaultEvents, _event)) return true;
+				if (variable_struct_exists(other, _event)) {
+					snowstate_error("Can not use \"", _event, "\" as an event.");
+					return false;
 				}
 			}
-		
-			return _events;
-		});
-	
-		update_states = method(other, function(_hasParent) {
-			var _states, _events, _state, _event, _i, _j;
-			
-			with (__this) {
-				_states = variable_struct_get_names(states);
-				_events = variable_struct_get_names(defaultEvents);
-		
-				_i = 0; repeat(array_length(_states)) {
-					_state = states[$ _states[@ _i]];
-					_j = 0; repeat(array_length(_events)) {
-						_event = _events[@ _j];
-						if (!variable_struct_exists(_state, _event)) {
-							_state[$ _event] = defaultEvents[$ _event];
-						}
-						++_j;
-					}
-					++_i;
-				}
-			}
-		
-			return self;
+			return true;
 		});
 		
-		update_from_parent = method(other, function(_name) {
-			var _events, _event, _parent, _state, _i;
-			
-			with (__this) {
-				_parent = states[$ parent[$ _name]];
-				_state  = states[$ _name];
-				
-				_events = variable_struct_get_names(_parent);
-				_i = 0; repeat (array_length(_events)) {
-					_event = _events[@ _i];
-					_state[$ _event] = _parent[$ _event];
-					++_i;
-				}
-			}
-			
-			return self;
-		});
-	
-		history_fit_contents = method(other, function() {
-			with (__this) {
-				array_resize(history, min(array_length(history), historyMaxSize));
-			}
-			return self;
-		});
-	
-		history_resize = method(other, function(_size) {
-			with (__this) {
-				historyMaxSize = _size;
-				history_fit_contents();
-			}
-			return self;
-		});
-	
-		history_add = method(other, function(_state) {
-			with (__this) {
-				if (historyEnabled) {
-					array_insert(history, 0, _state);
-					history_fit_contents();
-				} else {
-					history[@ 0] = _state;
-				}
-			}
-			return self;
-		});
-	
-		execute = method(other, function(_event, _state) {
-			with (__this) {
-				if (_state == undefined) _state = history[@ 0];
-				currEvent = _event;
-			
-				if (!is_state_defined(_state)) {
-					snowstate_error("State \"", _state, "\" is not defined.");
-					return undefined;
-				}
-				
-				states[$ _state][$ _event]();
-			}
-			
-			return self;
-		});
-	
 		change = method(other, function(_state, _leave, _enter) {
 			var _defLeave, _defEnter;
 			_defLeave = leave;
@@ -280,8 +150,186 @@ function SnowState(_initState) constructor {
 		
 			return self;
 		});
+
+		create_events_struct = method(other, function(_struct) {
+			var _events = {};
+			var _arr, _i, _event, _defEvent;
+			
+			with (__this) {
+				_arr = variable_struct_get_names(_struct);
+				_i = 0; repeat(array_length(_arr)) {
+					_event = _arr[@ _i];
+					assert_event_name_valid(_event);
+					assert_event_available(_event);
+					_events[$ _event] = {
+						exists: SNOWSTATE_EVENT.DEFINED,
+						func: method(owner, _struct[$ _event])
+					};
+					++_i;
+				}
+		
+				_arr = variable_struct_get_names(defaultEvents);
+				_i = 0; repeat(array_length(_arr)) {
+					_event = _arr[@ _i];
+					_defEvent = defaultEvents[$ _event];
+					if (!variable_struct_exists(_struct, _event)) {
+						_events[$ _event] = {
+							exists: _defEvent.exists,
+							func: method(owner, _defEvent.func)
+						};
+					}
+					++_i;
+				}
+			}
+		
+			return _events;
+		});
+	
+		execute = method(other, function(_event, _state) {
+			with (__this) {
+				if (_state == undefined) _state = history[@ 0];
+				currEvent = _event;
+			
+				if (!is_state_defined(_state)) {
+					snowstate_error("State \"", _state, "\" is not defined.");
+					return undefined;
+				}
+				
+				states[$ _state][$ _event].func();
+			}
+			
+			return self;
+		});
+	
+		history_add = method(other, function(_state) {
+			with (__this) {
+				if (historyEnabled) {
+					array_insert(history, 0, _state);
+					history_fit_contents();
+				} else {
+					history[@ 0] = _state;
+				}
+			}
+			return self;
+		});
+	
+		history_fit_contents = method(other, function() {
+			with (__this) {
+				array_resize(history, min(array_length(history), historyMaxSize));
+			}
+			return self;
+		});
+	
+		history_resize = method(other, function(_size) {
+			with (__this) {
+				historyMaxSize = _size;
+				history_fit_contents();
+			}
+			return self;
+		});
+	
+		is_really_a_method = method(other, function(_method) {
+			try {
+				return is_method(method(undefined, _method));
+			} catch (_e) {
+				return false;	
+			}
+		});
+		
+		is_state_defined = method(other, function(_state) {
+			return (is_string(_state) && variable_struct_exists(__this.states, _state));
+		});
+	
+		set_default_event = method(other, function(_event, _method, _defined) {
+			with (__this) {
+				defaultEvents[$ _event] = {
+					exists: _defined,
+					func: _method
+				};
+				add_event_method(_event);
+			}
+			return self;
+		});
+	
+		snowstate_error = method(other, function() {
+			var _str = "[SnowState]\n";
+			var _i = 0; repeat(argument_count) {
+				_str += string(argument[_i++]);	
+			}
+			_str += "\n\n\n";
+			show_error(_str, true);
+		});
+	
+		snowstate_trace = method(other, function() {
+			var _str = "[SnowState] ";
+			var _i = 0; repeat(argument_count) {
+				_str += string(argument[_i++]);	
+			}
+			show_debug_message(_str);
+		});
+	
+		update_from_parent = method(other, function(_name) {
+			var _parent, _state, _events, _event, _exists, _parEvent, _i;
+			
+			with (__this) {
+				_parent = states[$ parent[$ _name]];
+				_state  = states[$ _name];
+				
+				_events = variable_struct_get_names(_parent);
+				_i = 0; repeat (array_length(_events)) {
+					_event = _events[@ _i];
+					_parEvent = _parent[$ _event];
+					
+					_exists = SNOWSTATE_EVENT.NOT_DEFINED;
+					switch (_parEvent.exists) {
+						case SNOWSTATE_EVENT.DEFINED	: _exists = SNOWSTATE_EVENT.INHERITED;	break;	
+						case SNOWSTATE_EVENT.INHERITED	: _exists = SNOWSTATE_EVENT.INHERITED;	break;	
+						case SNOWSTATE_EVENT.DEFAULT	: _exists = SNOWSTATE_EVENT.DEFAULT;	break;
+						default: break;
+					}
+					
+					_state[$ _event] = {
+						exists: _exists,
+						func: _parEvent.func
+					};
+					++_i;
+				}
+			}
+			
+			return self;
+		});
+	
+		update_states = method(other, function(_hasParent) {
+			var _states, _events, _state, _event, _defEvent, _i, _j;
+			
+			with (__this) {
+				_states = variable_struct_get_names(states);
+				_events = variable_struct_get_names(defaultEvents);
+		
+				_i = 0; repeat(array_length(_states)) {
+					_state = states[$ _states[@ _i]];
+					_j = 0; repeat(array_length(_events)) {
+						_event = _events[@ _j];
+						if (!variable_struct_exists(_state, _event)) {
+							_defEvent = defaultEvents[$ _event];
+							_state[$ _event] = {
+								exists: _defEvent.exists,
+								func: method(owner, _defEvent.func)
+							};
+						}
+						++_j;
+					}
+					++_i;
+				}
+			}
+		
+			return self;
+		});
 	}
+
 	#endregion
+	
+	#region Basics
 	
 	add = function(_name, _struct) {
 		__this.add(_name, _struct, false);
@@ -355,6 +403,10 @@ function SnowState(_initState) constructor {
 		return floor((get_timer()-__this.stateStartTime) * _factor);
 	};
 	
+	#endregion
+	
+	#region Inheritance
+	
 	add_child = function(_parent, _name, _struct) {
 		with (__this) {
 			if (!is_string(_parent) || (_parent == "")) {
@@ -427,6 +479,10 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
+	#endregion
+	
+	#region Events
+	
 	event_set_default_function = function(_event, _function) {
 		with (__this) {
 			if (SNOWSTATE_DEBUG_WARNING && (variable_struct_names_count(states) > 0)) {
@@ -444,11 +500,19 @@ function SnowState(_initState) constructor {
 			}
 		
 			assert_event_name_valid(_event);
-			set_default_event(_event, method(owner, _function));
+			set_default_event(_event, method(owner, _function), SNOWSTATE_EVENT.DEFAULT);
 			update_states();
 		}
 		
 		return self;
+	};
+	
+	event_exists = function(_event) {
+		try {
+			return __this.states[$ get_current_state()][$ _event].exists;
+		} catch(_e) {}
+		
+		return SNOWSTATE_EVENT.NOT_DEFINED;
 	};
 	
 	enter = function() {
@@ -460,6 +524,10 @@ function SnowState(_initState) constructor {
 		__this.execute("leave");
 		return self;
 	};
+	
+	#endregion
+	
+	#region History
 	
 	history_enable = function() {
 		with (__this) {
@@ -523,6 +591,8 @@ function SnowState(_initState) constructor {
 		}
 	};
 	
+	#endregion
+	
 	// Initialization
 	with (__this) {
 		if (!is_string(_initState) || (_initState == "")) {
@@ -533,10 +603,10 @@ function SnowState(_initState) constructor {
 		if (historyEnabled) other.history_enable();
 			else other.history_disable();
 	}
+
 }
 
-
-#macro SNOWSTATE_VERSION "v2.2.0"
-#macro SNOWSTATE_DATE "20-06-2021"
+#macro SNOWSTATE_VERSION "v2.2.1"
+#macro SNOWSTATE_DATE "22-06-2021"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");
