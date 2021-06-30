@@ -1,9 +1,5 @@
 ART ASSETS
+-----------
 
-> A platformer in the forest
-Link  : https://opengameart.org/content/a-platformer-in-the-forest
-Author: Buch (https://opengameart.org/users/buch)
-
-> Background elements
-Link  : https://opengameart.org/content/background-elements
-Author: Kenney (www.kenney.nl)
+Treasure Hunters | Pixel Frog
+https://pixelfrog-assets.itch.io/treasure-hunters

@@ -1,5 +1,5 @@
 /**
-*	SnowState | v2.2.1
+*	SnowState | v2.3.0
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki
 *
 *	Author: Sohom Sahaun | @sohomsahaun
@@ -33,8 +33,8 @@ function SnowState(_initState) constructor {
 		currEvent		= undefined;
 		parent			= {};
 		childQueue		= [];
-		history			= [];
-		historyMaxSize	= max(1, SNOWSTATE_DEFAULT_HISTORY_MAX_SIZE);
+		history			= array_create(2, undefined);
+		historyMaxSize	= max(0, SNOWSTATE_DEFAULT_HISTORY_MAX_SIZE);
 		historyEnabled	= SNOWSTATE_HISTORY_ENABLED;
 		defaultEvents	= {
 			enter: {
@@ -48,6 +48,7 @@ function SnowState(_initState) constructor {
 		};
 		
 		add = method(other, function(_name, _struct, _hasParent) {
+			if (_struct == undefined) _struct = {};
 			if (_hasParent == undefined) _hasParent = false;
 			var _events, _state, _event, _i;
 			
@@ -200,13 +201,27 @@ function SnowState(_initState) constructor {
 			
 			return self;
 		});
+			
+		get_current_state = method(other, function() {
+			with (__this) {
+				var _state = ((array_length(history) > 0) ? history[@ 0] : undefined);
+				if (array_length(childQueue) > 0) _state = childQueue[@ 0];
+				return _state;
+			}
+		});
 	
 		history_add = method(other, function(_state) {
 			with (__this) {
 				if (historyEnabled) {
-					array_insert(history, 0, _state);
-					history_fit_contents();
+					if (history[@ 1] == undefined) {
+						history[@ 1] = history[@ 0];
+						history[@ 0] = _state;
+					} else {
+						array_insert(history, 0, _state);
+						history_fit_contents();
+					}
 				} else {
+					history[@ 1] = history[@ 0];
 					history[@ 0] = _state;
 				}
 			}
@@ -215,15 +230,7 @@ function SnowState(_initState) constructor {
 	
 		history_fit_contents = method(other, function() {
 			with (__this) {
-				array_resize(history, min(array_length(history), historyMaxSize));
-			}
-			return self;
-		});
-	
-		history_resize = method(other, function(_size) {
-			with (__this) {
-				historyMaxSize = _size;
-				history_fit_contents();
+				array_resize(history, max(2, min(historyMaxSize, array_length(history))));
 			}
 			return self;
 		});
@@ -359,17 +366,23 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
-	state_is = function(_name) {
-		var _state = get_current_state();
+	state_is = function(_target, _source) {
+		if (_source == undefined) _source = get_current_state();
+		var _state = _source;
 			
 		with (__this) {
-			if (!is_string(_name) || (_name == "")) {
+			if (!is_string(_target) || (_target == "")) {
+				snowstate_error("State name should be a non-empty string.");
+				return undefined;
+			}
+			
+			if (!is_string(_source) || (_source == "")) {
 				snowstate_error("State name should be a non-empty string.");
 				return undefined;
 			}
 		
 			while (_state != undefined) {
-				if (_state == _name) return true;
+				if (_state == _target) return true;
 				_state = variable_struct_exists(parent, _state) ? parent[$ _state] : undefined;
 			}
 		}
@@ -377,30 +390,28 @@ function SnowState(_initState) constructor {
 		return false;
 	};
 	
+	get_states = function() {
+		with (__this) {
+			return variable_struct_get_names(states);	
+		}
+	};
+	
 	get_current_state = function() {
 		with (__this) {
-			var _state = ((array_length(history) > 0) ? history[@ 0] : undefined);
-			if (array_length(childQueue) > 0) _state = childQueue[@ 0];
-			return _state;
+			return get_current_state();
 		}
 	};
 	
 	get_previous_state = function() {
 		with (__this) {
-			if (!historyEnabled) {
-				if (SNOWSTATE_DEBUG_WARNING) {
-					snowstate_trace("History is disabled, can not get previous state.");	
-				}
-				return undefined;
-			}
 			return ((array_length(history) > 1) ? history[@ 1] : undefined);
 		}
 	};
 	
 	get_time = function(_seconds) {
 		if (_seconds == undefined) _seconds = false;
-		var _factor = _seconds ? 1/1000000 : game_get_speed(gamespeed_fps)/1000000;
-		return floor((get_timer()-__this.stateStartTime) * _factor);
+		var _time = (get_timer()-__this.stateStartTime) * 1/1000000;
+		return (_seconds ? _time : floor(_time * game_get_speed(gamespeed_fps)));
 	};
 	
 	#endregion
@@ -533,7 +544,7 @@ function SnowState(_initState) constructor {
 		with (__this) {
 			if (!historyEnabled) {
 				historyEnabled = true;
-				history_resize(historyMaxSize);
+				history_fit_contents();
 			}
 		}
 		return self;
@@ -543,7 +554,7 @@ function SnowState(_initState) constructor {
 		with (__this) {
 			if (historyEnabled) {
 				historyEnabled = false;
-				array_resize(history, 1);
+				array_resize(history, 2);
 			}
 		}
 		return self;
@@ -559,13 +570,14 @@ function SnowState(_initState) constructor {
 				snowstate_error("Size should be a number.");
 				return undefined;
 			}
-			if (_size < 1) {
+			if (_size < 0) {
 				if (SNOWSTATE_DEBUG_WARNING) {
-					snowstate_trace("History size should be 1 or more. Setting the size to 1 instead of ", _size, ".");
+					snowstate_trace("History size should non-negative. Setting the size to 0 instead of ", _size, ".");
 				}
-				_size = 1;
+				_size = 0;
 			}
-			history_resize(_size);
+			historyMaxSize = _size;
+			history_fit_contents();
 		}
 		
 		return self;
@@ -576,6 +588,7 @@ function SnowState(_initState) constructor {
 	};
 	
 	get_history = function() {
+		var _prev = get_previous_state();
 		with (__this) {
 			if (!historyEnabled) {
 				if (SNOWSTATE_DEBUG_WARNING) {
@@ -583,10 +596,11 @@ function SnowState(_initState) constructor {
 				}
 				return [];
 			}
-			var _len = array_length(history);
+			if (_prev == undefined) return [get_current_state()];
+			var _len = min(array_length(history), historyMaxSize);
 			var _arr = array_create(_len);
 			array_copy(_arr, 0, history, 0, _len);
-			if (array_length(childQueue) > 0) _arr[@ 0] = childQueue[@ 0];
+			_arr[@ 0] = get_current_state();
 			return _arr;
 		}
 	};
@@ -598,15 +612,13 @@ function SnowState(_initState) constructor {
 		if (!is_string(_initState) || (_initState == "")) {
 			snowstate_error("State name should be a non-empty string.");
 		}
+		
 		history_add(_initState);
-	
-		if (historyEnabled) other.history_enable();
-			else other.history_disable();
 	}
 
 }
 
-#macro SNOWSTATE_VERSION "v2.2.1"
-#macro SNOWSTATE_DATE "22-06-2021"
+#macro SNOWSTATE_VERSION "v2.3.0"
+#macro SNOWSTATE_DATE "30-06-2021"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");
