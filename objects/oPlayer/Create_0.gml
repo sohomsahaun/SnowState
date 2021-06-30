@@ -77,7 +77,7 @@ state
 				return;
 			}
 			
-			// If jump key is pressed, run
+			// If jump key is pressed, jump
 			if (input.jump) {
 				state.change("jump");
 				return;
@@ -133,7 +133,7 @@ state
 			
 			face = _dir;
 			
-			// If jump key is pressed, run
+			// If jump key is pressed, jump
 			if (input.jump) {
 				state.change("jump");
 				return;
