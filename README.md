@@ -10,7 +10,7 @@ You can find downloadable .yyz (project file with demo) and .yymps (SnowState on
 &nbsp;
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/27750907/108866867-cf109900-761e-11eb-9a28-a1d924d4504a.gif">
+  <img src="https://user-images.githubusercontent.com/27750907/124273546-f4c82480-db61-11eb-8df2-36948a7a4c07.gif">
 </p>
 
 &nbsp;
