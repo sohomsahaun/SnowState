@@ -1,1 +1,1 @@
-state.step();
+fsm.step();

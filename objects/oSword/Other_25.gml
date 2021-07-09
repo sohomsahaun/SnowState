@@ -1,7 +1,7 @@
 /// @desc Methods
 
 recall = function() {
-	if (instance_exists(owner) && state.state_is("embedded")) {
-		state.change("recall");
+	if (instance_exists(owner) && fsm.state_is("embedded")) {
+		fsm.change("recall");
 	}
 };

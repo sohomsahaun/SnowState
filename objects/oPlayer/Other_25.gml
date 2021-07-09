@@ -22,7 +22,7 @@ init_effect_sprites = function() {
 };
 
 get_sprite = function() {
-	return sprites[$ state.get_current_state()][@ hasSword];
+	return sprites[$ fsm.get_current_state()][@ hasSword];
 };
 
 check_input = function() {
@@ -61,7 +61,7 @@ spawn_sword = function() {
 	with (instance_create_depth(x+6*face, y-14, depth, oSword)) {
 		owner = other.id;
 		face  = owner.face;
-		state.change("spinning");
+		fsm.change("spinning");
 	}
 };
 

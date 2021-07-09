@@ -26,9 +26,9 @@ view_visible[0] = true;
 alarm[0] = 1;
 
 // State Machine
-state = new SnowState("instance");
+fsm = new SnowState("instance");
 
-state
+fsm
 	.add("instance", {
 		step: function() {
 			var _targ = targetInst;

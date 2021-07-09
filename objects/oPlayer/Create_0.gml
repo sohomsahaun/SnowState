@@ -50,9 +50,9 @@ input = {};
 check_input();
 
 // State Machine
-state = new SnowState("idle");
+fsm = new SnowState("idle");
 
-state
+fsm
 	.history_enable()
 	.set_history_max_size(20)
 	.event_set_default_function("draw", function() {
@@ -73,26 +73,26 @@ state
 			
 			// If left or right keys are pressed, run
 			if (abs(input.hdir)) {
-				state.change("run");
+				fsm.change("run");
 				return;
 			}
 			
 			// If jump key is pressed, jump
 			if (input.jump) {
-				state.change("jump");
+				fsm.change("jump");
 				return;
 			}
 			
 			if (hasSword) {
 				// If attack key is pressed, go into groundAttack1
 				if (input.attack) {
-					state.change("groundAttack1");
+					fsm.change("groundAttack1");
 					return;
 				}
 			
 				// Throw the sword
 				if (input.throwSword && hasSword) {
-					state.change("throwSword");
+					fsm.change("throwSword");
 					return;
 				}
 			} else {
@@ -109,7 +109,7 @@ state
 			
 			// Check if I'm flating
 			if (!on_ground()) {
-				state.change("fall");
+				fsm.change("fall");
 				return;
 			}
 		}
@@ -127,7 +127,7 @@ state
 			
 			// If left and right keys are not pressed, switch back to idle
 			if (_dir == 0) {
-				state.change("idle");
+				fsm.change("idle");
 				return;
 			}
 			
@@ -135,20 +135,20 @@ state
 			
 			// If jump key is pressed, jump
 			if (input.jump) {
-				state.change("jump");
+				fsm.change("jump");
 				return;
 			}
 			
 			if (hasSword) {
 				// If attack key is pressed, go into groundAttack1
 				if (input.attack) {
-					state.change("groundAttack1");
+					fsm.change("groundAttack1");
 					return;
 				}
 			
 				// Throw the sword
 				if (input.throwSword && hasSword) {
-					state.change("throwSword");
+					fsm.change("throwSword");
 					return;
 				}
 			} else {
@@ -165,7 +165,7 @@ state
 			
 			// Check if I'm flating
 			if (!on_ground()) {
-				state.change("fall");
+				fsm.change("fall");
 				return;
 			}
 		}
@@ -189,7 +189,7 @@ state
 			
 			// Throw the sword
 			if (input.throwSword && hasSword) {
-				state.change("throwSword");
+				fsm.change("throwSword");
 				return;
 			}
 			
@@ -205,7 +205,7 @@ state
 			
 			// Check when we should start falling
 			if (vspd >= 0) {
-				state.change("fall");
+				fsm.change("fall");
 				return;
 			}
 		}
@@ -218,7 +218,7 @@ state
 			
 			// If I have not done air attack when falling now, activate air attack
 			// Air attack can be done once when falling
-			if (state.state_is("airAttack", state.get_previous_state())) canAirAttack = false;
+			if (fsm.state_is("airAttack", fsm.get_previous_state())) canAirAttack = false;
 				else canAirAttack = true;
 			
 		},
@@ -237,13 +237,13 @@ state
 			if (hasSword) {
 				// If attack key is pressed, go into airAttack1
 				if (input.attack && canAirAttack) {
-					state.change("airAttack1");
+					fsm.change("airAttack1");
 					return;
 				}
 			
 				// Throw the sword
 				if (input.throwSword) {
-					state.change("throwSword");
+					fsm.change("throwSword");
 					return;
 				}
 			} else {
@@ -255,10 +255,10 @@ state
 			}
 			
 			// Coyote time
-			if ((state.get_time() <= coyoteDuration) && input.jump) {
+			if ((fsm.get_time() <= coyoteDuration) && input.jump) {
 				// Apply only if we were running
-				if (state.get_previous_state() == "run") {
-					state.change("jump");
+				if (fsm.get_previous_state() == "run") {
+					fsm.change("jump");
 					return;
 				}
 			}
@@ -269,7 +269,7 @@ state
 			
 			// Check when we land
 			if (on_ground()) {
-				state.change("idle");
+				fsm.change("idle");
 				return;
 			}
 		}
@@ -283,7 +283,7 @@ state
 			nextAttack = false;
 			
 			// Create effect
-			var _sprite = effectSprites[$ state.get_current_state()];
+			var _sprite = effectSprites[$ fsm.get_current_state()];
 			var _face = face;
 			var _x = x + _face * 8;
 			with (instance_create_depth(_x, y, depth, oEffect)) {
@@ -304,7 +304,7 @@ state
 	.add_child("attack", "groundAttack", {
 		/// @override
 		enter: function() {
-			state.inherit();
+			fsm.inherit();
 			
 			// Stop
 			hspd = 0;
@@ -313,18 +313,18 @@ state
 			
 		/// @override
 		step: function() {
-			state.inherit();
+			fsm.inherit();
 			
 			// When the animation ends, go to the next attack state if attack has been pressed
 			// Otherwise, just go idle
 			if (animation_end()) {
 				if (nextAttack) {
-					var _state = state.get_current_state();
+					var _state = fsm.get_current_state();
 					var _curr = real(string_digits(_state));
 					var _next = string_letters(_state) + string(_curr+1);
-					state.change(_next);
+					fsm.change(_next);
 				} else {
-					state.change("idle");
+					fsm.change("idle");
 				}
 				return;
 			}
@@ -337,7 +337,7 @@ state
 		step: function() {
 			// When the animation ends, go to idle state
 			if (animation_end()) {
-				state.change("idle");
+				fsm.change("idle");
 				return;
 			}
 		}
@@ -345,7 +345,7 @@ state
 	.add_child("attack", "airAttack", {
 		/// @override
 		enter: function() {
-			state.inherit();
+			fsm.inherit();
 			
 			// Lower the gravity
 			grav = gravAttack;
@@ -353,7 +353,7 @@ state
 		},			
 		/// @override
 		step: function() {
-			state.inherit();
+			fsm.inherit();
 			
 			// Go down, slowly
 			apply_gravity();
@@ -361,7 +361,7 @@ state
 			
 			// Check when we land
 			if (on_ground()) {
-				state.change("idle");
+				fsm.change("idle");
 				return;
 			}
 			
@@ -369,12 +369,12 @@ state
 			// Otherwise, just back to falling again
 			if (animation_end()) {
 				if (nextAttack) {
-					var _state = state.get_current_state();
+					var _state = fsm.get_current_state();
 					var _curr = real(string_digits(_state));
 					var _next = string_letters(_state) + string(_curr+1);
-					state.change(_next);
+					fsm.change(_next);
 				} else {
-					state.change("fall");
+					fsm.change("fall");
 				}
 				return;
 			}
@@ -393,7 +393,7 @@ state
 			
 			// When the animation ends, go to fall state again
 			if (animation_end()) {
-				state.change("fall");
+				fsm.change("fall");
 				return;
 			}
 		}
@@ -415,9 +415,9 @@ state
 				// Switch the state to idle or fall,
 				// depending on what the previous state was
 				var _state = "idle";
-				if (state.get_previous_state() == "jump") _state = "fall";
-				if (state.get_previous_state() == "fall") _state = "fall";
-				state.change(_state);
+				if (fsm.get_previous_state() == "jump") _state = "fall";
+				if (fsm.get_previous_state() == "fall") _state = "fall";
+				fsm.change(_state);
 				return;
 			}
 			

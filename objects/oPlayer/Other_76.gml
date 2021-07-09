@@ -1,1 +1,1 @@
-state.throwSword();
+fsm.throwSword();

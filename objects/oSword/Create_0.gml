@@ -11,9 +11,9 @@ hspd = 0;
 face = 1;
 
 // State Machine
-state = new SnowState("NULL");
+fsm = new SnowState("NULL");
 
-state
+fsm
 	.event_set_default_function("draw", function() {
 		// Draw this no matter what state we are in
 		// (Unless it is overridden, ofcourse)
@@ -32,7 +32,7 @@ state
 		},
 		step: function() {
 			if (place_meeting(x+hspd, y, oWall)) {
-				state.change("embedded");
+				fsm.change("embedded");
 				return;
 			}
 			x += hspd;
