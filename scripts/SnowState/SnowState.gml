@@ -1,5 +1,5 @@
 /**
-*	SnowState | v2.3.0
+*	SnowState | v2.9.9999
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki
 *
 *	Author: Sohom Sahaun | @sohomsahaun
@@ -7,8 +7,8 @@
 
 /// @func SnowState(initial_state, [execute_enter])
 /// @param {string} initial_state		Initial state for the state machine
-/// @param {bool}	[execute_enter]		Whether to execute the "enter" event for the initial state (true) or not (false) [Default: true]
-function SnowState(_initState) constructor {
+/// @param {bool}   [execute_enter]		Whether to execute the "enter" event for the initial state (true) or not (false) [Default: true]
+function SnowState(_initState, _execEnter = true) constructor {
 	
 	#region SnowState System
 	
@@ -19,9 +19,7 @@ function SnowState(_initState) constructor {
 		DEFAULT		= 4,
 	}
 	
-	var _execEnter = (argument_count > 1) ? argument[1] : true;
 	var _owner = other;
-	
 	__this = {};
 	
 	with (__this) {
@@ -48,25 +46,10 @@ function SnowState(_initState) constructor {
 		};
 		
 		add = method(other, function(_name, _struct, _hasParent) {
-			if (_struct == undefined) _struct = {};
-			if (_hasParent == undefined) _hasParent = false;
 			var _events, _state, _event, _i;
+			var _self = self;
 			
 			with (__this) {
-				if (!is_string(_name) || (_name == "")) {
-					snowstate_error("State name should be a non-empty string.");
-					return undefined;
-				}
-		
-				if (SNOWSTATE_DEBUG_WARNING && is_state_defined(_name)) {
-					snowstate_trace("State \"", _name, "\" has been defined already. The previous definition has been replaced.");
-				}
-		
-				if (!is_struct(_struct)) {
-					snowstate_error("State struct should be a struct.");
-					return undefined;
-				}
-		
 				_state = create_events_struct(_struct);
 				states[$ _name] = _state;
 				
@@ -91,7 +74,7 @@ function SnowState(_initState) constructor {
 				
 				// Execute "enter" event
 				if (_name == initState) {
-					if (execEnter) other.enter();
+					if (execEnter) _self.enter();
 				}
 			}
 		});
@@ -186,15 +169,14 @@ function SnowState(_initState) constructor {
 			return _events;
 		});
 	
-		execute = method(other, function(_event, _state) {
+		execute = method(other, function(_event, _state = __this.history[@ 0]) {
 			with (__this) {
-				if (_state == undefined) _state = history[@ 0];
-				currEvent = _event;
-			
 				if (!is_state_defined(_state)) {
 					snowstate_error("State \"", _state, "\" is not defined.");
 					return undefined;
 				}
+				
+				currEvent = _event;
 				
 				states[$ _state][$ _event].func();
 			}
@@ -244,7 +226,9 @@ function SnowState(_initState) constructor {
 		});
 		
 		is_state_defined = method(other, function(_state) {
-			return (is_string(_state) && variable_struct_exists(__this.states, _state));
+			with (__this) {
+				return (is_string(_state) && variable_struct_exists(states, _state));
+			}
 		});
 	
 		set_default_event = method(other, function(_event, _method, _defined) {
@@ -338,25 +322,46 @@ function SnowState(_initState) constructor {
 	
 	#region Basics
 	
-	add = function(_name, _struct) {
-		__this.add(_name, _struct, false);
+	/// @param {string} state_name
+	/// @param {struct} [state_struct]
+	/// @returns {SnowState} self
+	add = function(_name, _struct = {}) {
+		with (__this) {
+			if (!is_string(_name) || (_name == "")) {
+				snowstate_error("State name should be a non-empty string.");
+				return undefined;
+			}
+	
+			if (!is_struct(_struct)) {
+				snowstate_error("State struct should be a struct.");
+				return undefined;
+			}
+	
+			if (SNOWSTATE_DEBUG_WARNING && is_state_defined(_name)) {
+				snowstate_trace("State \"", _name, "\" has been defined already. Replacing the previous definition.");
+			}
+			
+			add(_name, _struct, false);
+		}
 		return self;
 	};
 	
-	change = function(_state, _leave, _enter) {
-		if (_leave == undefined) _leave = -1;
-		if (_enter == undefined) _enter = -1;
-		if (_leave == -1) _leave = leave;
-		if (_enter == -1) _enter = enter;
+	/// @param {string} state_name
+	/// @param {function} leave_func
+	/// @param {function} enter_func
+	/// @returns {SnowState} self
+	change = function(_state, _leave = SNOWSTATE_EVENT_DEFAULT_FUNCTION, _enter = SNOWSTATE_EVENT_DEFAULT_FUNCTION) {
+		if (_leave == SNOWSTATE_EVENT_DEFAULT_FUNCTION) _leave = leave;
+		if (_enter == SNOWSTATE_EVENT_DEFAULT_FUNCTION) _enter = enter;
 		
 		with (__this) {
 			if (!is_really_a_method(_leave)) {
-				snowstate_error("Invalid command \"", _leave, "\" in change().");
+				snowstate_error("Invalid command for \"leave\" in change().");
 				return undefined;
 			}
 		
 			if (!is_really_a_method(_enter)) {
-				snowstate_error("Invalid command \"", _enter, "\" in change().");
+				snowstate_error("Invalid command for \"enter\" in change().");
 				return undefined;
 			}
 		
@@ -366,8 +371,10 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
-	state_is = function(_target, _source) {
-		if (_source == undefined) _source = get_current_state();
+	/// @param {string} state_name
+	/// @param {string} [state_to_check]
+	/// @returns {bool} Whether state_name is state_to_check or a parent of state_to_check (true), or not (false)
+	state_is = function(_target, _source = get_current_state()) {
 		var _state = _source;
 			
 		with (__this) {
@@ -390,36 +397,51 @@ function SnowState(_initState) constructor {
 		return false;
 	};
 	
+	/// @returns {array} Array containing the states defined
 	get_states = function() {
 		with (__this) {
 			return variable_struct_get_names(states);	
 		}
 	};
 	
+	/// @returns {string} The current state
 	get_current_state = function() {
 		with (__this) {
 			return get_current_state();
 		}
 	};
 	
+	/// @returns {string} The previous state
 	get_previous_state = function() {
 		with (__this) {
 			return ((array_length(history) > 1) ? history[@ 1] : undefined);
 		}
 	};
 	
-	get_time = function(_seconds) {
-		if (_seconds == undefined) _seconds = false;
-		var _time = (get_timer()-__this.stateStartTime) * 1/1000000;
-		return (_seconds ? _time : floor(_time * game_get_speed(gamespeed_fps)));
+	/// @param {bool} [seconds]
+	/// @returns {int} Number of steps (or seconds) the current state has been running for
+	get_time = function(_seconds = false) {
+		with (__this) {
+			var _time = (get_timer()-stateStartTime) * 1/1000000;
+			return (_seconds ? _time : floor(_time * game_get_speed(gamespeed_fps)));
+		}
 	};
 	
 	#endregion
 	
 	#region Inheritance
 	
-	add_child = function(_parent, _name, _struct) {
+	/// @param {string} parent_state_name
+	/// @param {string} state_name
+	/// @param {struct} [state_struct]
+	/// @return {SnowState} self
+	add_child = function(_parent, _name, _struct = {}) {
 		with (__this) {
+			if (!is_string(_name) || (_name == "")) {
+				snowstate_error("State name should be a non-empty string.");
+				return undefined;
+			}
+			
 			if (!is_string(_parent) || (_parent == "")) {
 				snowstate_error("State name should be a non-empty string.");
 				return undefined;
@@ -434,11 +456,22 @@ function SnowState(_initState) constructor {
 				snowstate_error("Cannot set a state as a parent to itself.");
 				return undefined;
 			}
+	
+			if (!is_struct(_struct)) {
+				snowstate_error("State struct should be a struct.");
+				return undefined;
+			}
 			
-			if (SNOWSTATE_DEBUG_WARNING && variable_struct_exists(parent, _name)) {
-				if (parent[$ _name] == _parent) {
-					snowstate_trace("State \"", _name, "\" is already a child of \"", _parent, "\".");
-					break;
+			if (SNOWSTATE_DEBUG_WARNING) {
+				if (is_state_defined(_name)) {
+					snowstate_trace("State \"", _name, "\" has been defined already. The previous definition has been replaced.");
+				}
+				
+				if (variable_struct_exists(parent, _name)) {
+					if (parent[$ _name] == _parent) {
+						snowstate_trace("State \"", _name, "\" is already a child of \"", _parent, "\".");
+						break;
+					}
 				}
 			}
 			
@@ -449,6 +482,7 @@ function SnowState(_initState) constructor {
 		return self;		
 	};
 	
+	/// @returns {SnowState} self
 	inherit = function() {
 		with (__this) {
 			var _state = history[@ 0];
@@ -494,6 +528,9 @@ function SnowState(_initState) constructor {
 	
 	#region Events
 	
+	/// @param {string} event
+	/// @param {function} function
+	/// @returns {SnowState} self
 	event_set_default_function = function(_event, _function) {
 		with (__this) {
 			if (SNOWSTATE_DEBUG_WARNING && (variable_struct_names_count(states) > 0)) {
@@ -518,21 +555,33 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
+	/// @param {string} event
+	/// @returns {int} SNOWSTATE_EVENT
 	event_exists = function(_event) {
-		try {
-			return __this.states[$ get_current_state()][$ _event].exists;
-		} catch(_e) {}
+		with (__this) {
+			try {
+				return states[$ get_current_state()][$ _event].exists;
+			} catch(_e) {}
+		}
 		
 		return SNOWSTATE_EVENT.NOT_DEFINED;
 	};
 	
+	/// @returns {SnowState} self
 	enter = function() {
-		__this.execute("enter");
+		with (__this) {
+			execute("enter");
+		}
+		
 		return self;
 	};
 	
+	/// @returns {SnowState} self
 	leave = function() {
-		__this.execute("leave");
+		with (__this) {
+			execute("leave");
+		}
+		
 		return self;
 	};
 	
@@ -540,6 +589,7 @@ function SnowState(_initState) constructor {
 	
 	#region History
 	
+	/// @returns {SnowState} self
 	history_enable = function() {
 		with (__this) {
 			if (!historyEnabled) {
@@ -550,6 +600,7 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
+	/// @returns {SnowState} self
 	history_disable = function() {
 		with (__this) {
 			if (historyEnabled) {
@@ -560,11 +611,16 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
+	/// @returns {bool} Whether state history is enabled (true), or not (false)
 	history_is_enabled = function() {
-		return __this.historyEnabled;
+		with (__this) {
+			return historyEnabled;
+		}
 	};
 	
-	set_history_max_size = function(_size) {
+	/// @param {int} size
+	/// @returns {SnowState} self
+	history_set_max_size = function(_size) {
 		with (__this) {
 			if (!is_real(_size)) {
 				snowstate_error("Size should be a number.");
@@ -582,12 +638,18 @@ function SnowState(_initState) constructor {
 		
 		return self;
 	};
+	set_history_max_size = history_set_max_size;
 	
-	get_history_max_size = function() {
-		return __this.historyMaxSize;	
+	/// @returns {int} The maximum storage capacity of state history
+	history_get_max_size = function() {
+		with (__this) {
+			return historyMaxSize;
+		}	
 	};
+	get_history_max_size = history_get_max_size;
 	
-	get_history = function() {
+	/// @returns {array} Array containing the state history
+	history_get = function() {
 		var _prev = get_previous_state();
 		with (__this) {
 			if (!historyEnabled) {
@@ -604,6 +666,7 @@ function SnowState(_initState) constructor {
 			return _arr;
 		}
 	};
+	get_history = history_get;
 	
 	#endregion
 	
@@ -618,7 +681,7 @@ function SnowState(_initState) constructor {
 
 }
 
-#macro SNOWSTATE_VERSION "v2.3.0"
-#macro SNOWSTATE_DATE "30-06-2021"
+#macro SNOWSTATE_VERSION "v2.9.9999"
+#macro SNOWSTATE_DATE "09-10-2021"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");

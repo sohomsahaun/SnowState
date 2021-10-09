@@ -19,8 +19,8 @@ fsm
 		// (Unless it is overridden, ofcourse)
 		draw_sprite_ext(sprite_index, image_index, x, y, face * image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 	})
-	.add("NULL", {})
-	.add("idle", {})
+	.add("NULL")
+	.add("idle")
 	.add("spinning", {
 		enter: function() {
 			sprite_index = sSwordSpinning;

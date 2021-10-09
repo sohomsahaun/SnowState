@@ -28,7 +28,7 @@ if (showHistory) {
 	_y = 10;
 
 	var _str, _states, _i;
-	_states = oPlayer.fsm.get_history();
+	_states = oPlayer.fsm.history_get();
 	_str = "groundAttack3";
 	
 	draw_set_alpha(.9);

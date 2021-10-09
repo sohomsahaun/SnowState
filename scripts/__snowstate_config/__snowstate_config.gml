@@ -3,6 +3,9 @@
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki/Configuration
 */
 
+// Value to be used in change() method to use the default leave/enter event
+#macro SNOWSTATE_EVENT_DEFAULT_FUNCTION undefined
+
 // Whether to show warning messages in Output (true) or not (false)
 #macro SNOWSTATE_DEBUG_WARNING true
 
