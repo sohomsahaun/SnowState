@@ -107,14 +107,10 @@ fsm
 			if (!on_ground()) {
 				return fsm.change("fall");
 			}
-		},
-		leave: function() {
-			show_debug_message("IDLE LEAVE");
 		}
 	})
 	.add("run", {
 		enter: function() {
-			show_debug_message("RUN ENTER");
 			sprite_index = get_sprite();
 			image_speed = 1;
 		},
