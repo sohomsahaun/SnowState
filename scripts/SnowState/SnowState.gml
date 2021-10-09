@@ -20,22 +20,22 @@ function SnowState(_initState, _execEnter = true) constructor {
 	}
 	
 	var _owner = other;
-	__this = {};
+	__this = {};		// Container for "private" members
 	
 	with (__this) {
-		owner			= _owner;
-		states			= {};
-		stateStartTime	= get_timer();
-		initState		= _initState;
-		execEnter		= _execEnter;
-		currEvent		= undefined;
-		tempEvent		= undefined;	// Used when changing states
-		parent			= {};
-		childQueue		= [];
-		history			= array_create(2, undefined);
-		historyMaxSize	= max(0, SNOWSTATE_DEFAULT_HISTORY_MAX_SIZE);
-		historyEnabled	= SNOWSTATE_HISTORY_ENABLED;
-		defaultEvents	= {
+		owner			= _owner;		// Context of the SnowState instances
+		states			= {};			// Struct holding the states
+		stateStartTime	= get_timer();	// Start time of the current state
+		initState		= _initState;	// Initial state of the SnowState instance
+		execEnter		= _execEnter;	// If the "enter" event should be executed by default or not
+		currEvent		= undefined;	// Current event
+		tempEvent		= undefined;	// Temporary event - Used when changing states
+		parent			= {};			// Inheritance tree
+		childQueue		= [];			// Path from root ancestor to current state
+		history			= array_create(2, undefined);	// Array holding the history
+		historyMaxSize	= max(0, SNOWSTATE_DEFAULT_HISTORY_MAX_SIZE);	// Maximum size of history
+		historyEnabled	= SNOWSTATE_HISTORY_ENABLED;	// If history is enabled or not
+		defaultEvents	= {		// Default functions for events
 			enter: {
 				exists: SNOWSTATE_EVENT.NOT_DEFINED,
 				func: function() {}
@@ -46,6 +46,10 @@ function SnowState(_initState, _execEnter = true) constructor {
 			},
 		};
 		
+		/// @param {string} state_name
+		/// @param {struct} state_struct
+		/// @param {bool} has_parent
+		/// @returns {SnowState} self
 		add = method(other, function(_name, _struct, _hasParent) {
 			var _events, _state, _event, _i;
 			var _self = self;
@@ -80,6 +84,8 @@ function SnowState(_initState, _execEnter = true) constructor {
 			}
 		});
 	
+		/// @param {string} event
+		/// @returns {SnowState} self
 		add_event_method = method(other, function(_event) {
 			var _temp = {
 				exec : __this.execute,
@@ -91,6 +97,8 @@ function SnowState(_initState, _execEnter = true) constructor {
 			return self;
 		});
 	
+		/// @param {string} event
+		/// @returns {SnowState} self
 		assert_event_available = method(other, function(_event) {
 			with (__this) {
 				if (!variable_struct_exists(defaultEvents, _event)) {
@@ -100,6 +108,8 @@ function SnowState(_initState, _execEnter = true) constructor {
 			return self;
 		});
 	
+		/// @param {string} event
+		/// @returns {SnowState} self
 		assert_event_name_valid = method(other, function(_event) {
 			with (__this) {
 				if (variable_struct_exists(defaultEvents, _event)) return true;
@@ -111,6 +121,10 @@ function SnowState(_initState, _execEnter = true) constructor {
 			return true;
 		});
 		
+		/// @param {string} state_name
+		/// @param {function} leave_func
+		/// @param {function} enter_func
+		/// @returns {SnowState} self
 		change = method(other, function(_state, _leave, _enter) {
 			var _defLeave, _defEnter, _self;
 			_self = self
@@ -147,7 +161,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 		
 			return self;
 		});
-
+		
+		/// @param {struct} state_struct
+		/// @return {struct} Struct filled with all possible events
 		create_events_struct = method(other, function(_struct) {
 			var _events = {};
 			var _arr, _i, _event, _defEvent;
@@ -181,7 +197,10 @@ function SnowState(_initState, _execEnter = true) constructor {
 		
 			return _events;
 		});
-	
+		
+		/// @param {string} event
+		/// @param {string} [state]
+		/// @returns {SnowState} self
 		execute = method(other, function(_event, _state = __this.history[@ 0]) {
 			with (__this) {
 				if (!is_state_defined(_state)) {
@@ -196,7 +215,8 @@ function SnowState(_initState, _execEnter = true) constructor {
 			
 			return self;
 		});
-			
+		
+		/// @returns {string} The current state
 		get_current_state = method(other, function() {
 			with (__this) {
 				var _state = ((array_length(history) > 0) ? history[@ 0] : undefined);
@@ -204,7 +224,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 				return _state;
 			}
 		});
-	
+		
+		/// @param {string} state
+		/// @returns {SnowState} self
 		history_add = method(other, function(_state) {
 			with (__this) {
 				if (historyEnabled) {
@@ -222,14 +244,16 @@ function SnowState(_initState, _execEnter = true) constructor {
 			}
 			return self;
 		});
-	
+		
+		/// @returns {SnowState} self
 		history_fit_contents = method(other, function() {
 			with (__this) {
 				array_resize(history, max(2, min(historyMaxSize, array_length(history))));
 			}
 			return self;
 		});
-	
+		
+		/// @returns {bool} Whether the argument is a method or a function (true), or not (false)
 		is_really_a_method = method(other, function(_method) {
 			try {
 				return is_method(method(undefined, _method));
@@ -238,12 +262,18 @@ function SnowState(_initState, _execEnter = true) constructor {
 			}
 		});
 		
+		/// @param {string} state
+		/// @return {bool} Whether the state is defined (true), or not (false)
 		is_state_defined = method(other, function(_state) {
 			with (__this) {
 				return (is_string(_state) && variable_struct_exists(states, _state));
 			}
 		});
-	
+		
+		/// @param {string} event
+		/// @param {function} method
+		/// @param {int} defined
+		/// @returns {SnowState} self
 		set_default_event = method(other, function(_event, _method, _defined) {
 			with (__this) {
 				defaultEvents[$ _event] = {
@@ -254,7 +284,8 @@ function SnowState(_initState, _execEnter = true) constructor {
 			}
 			return self;
 		});
-	
+		
+		/// @returns {SnowState} self
 		snowstate_error = method(other, function() {
 			var _str = "[SnowState]\n";
 			var _i = 0; repeat(argument_count) {
@@ -262,16 +293,21 @@ function SnowState(_initState, _execEnter = true) constructor {
 			}
 			_str += "\n\n\n";
 			show_error(_str, true);
+			return self;
 		});
-	
+		
+		/// @returns {SnowState} self
 		snowstate_trace = method(other, function() {
 			var _str = "[SnowState] ";
 			var _i = 0; repeat(argument_count) {
 				_str += string(argument[_i++]);	
 			}
 			show_debug_message(_str);
+			return self;
 		});
-	
+		
+		/// @param {string} state_name
+		/// @returns {SnowState} self
 		update_from_parent = method(other, function(_name) {
 			var _parent, _state, _events, _event, _exists, _parEvent, _i;
 			
@@ -302,7 +338,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 			
 			return self;
 		});
-	
+		
+		/// @param {bool} has_parent
+		/// @returns {SnowState} self
 		update_states = method(other, function(_hasParent) {
 			var _states, _events, _state, _event, _defEvent, _i, _j;
 			
