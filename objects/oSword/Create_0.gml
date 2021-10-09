@@ -32,8 +32,7 @@ fsm
 		},
 		step: function() {
 			if (place_meeting(x+hspd, y, oWall)) {
-				fsm.change("embedded");
-				return;
+				return fsm.change("embedded");
 			}
 			x += hspd;
 		}

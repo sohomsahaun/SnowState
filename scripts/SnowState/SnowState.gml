@@ -1,5 +1,5 @@
 /**
-*	SnowState | v2.9.9999
+*	SnowState | v2.9.9999 (dev)
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki
 *
 *	Author: Sohom Sahaun | @sohomsahaun
@@ -29,6 +29,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 		initState		= _initState;
 		execEnter		= _execEnter;
 		currEvent		= undefined;
+		tempEvent		= undefined;	// Used when changing states
 		parent			= {};
 		childQueue		= [];
 		history			= array_create(2, undefined);
@@ -111,23 +112,35 @@ function SnowState(_initState, _execEnter = true) constructor {
 		});
 		
 		change = method(other, function(_state, _leave, _enter) {
-			var _defLeave, _defEnter;
+			var _defLeave, _defEnter, _self;
+			_self = self
 			_defLeave = leave;
 			_defEnter = enter;
 			leave = _leave;
 			enter = _enter;
 			
-			leave();
 			with (__this) {
+				// Leave current state
+				tempEvent = _defLeave;
+				with (_self) leave();
+				
+				// Add to history
 				if (array_length(childQueue) > 0) {
 					history[@ 0] = childQueue[@ 0];
 					childQueue = [];
 				}
 				
+				// Init state
 				stateStartTime = get_timer();
 				history_add(_state);
+				
+				// Enter next state
+				tempEvent = _defEnter;
+				with (_self) enter();
+				
+				// Reset temp variable
+				tempEvent = undefined;
 			}
-			enter();
 			
 			leave = _defLeave;
 			enter = _defEnter;
@@ -350,10 +363,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @param {function} leave_func
 	/// @param {function} enter_func
 	/// @returns {SnowState} self
-	change = function(_state, _leave = SNOWSTATE_EVENT_DEFAULT_FUNCTION, _enter = SNOWSTATE_EVENT_DEFAULT_FUNCTION) {
-		if (_leave == SNOWSTATE_EVENT_DEFAULT_FUNCTION) _leave = leave;
-		if (_enter == SNOWSTATE_EVENT_DEFAULT_FUNCTION) _enter = enter;
-		
+	change = function(_state, _leave = leave, _enter = enter) {
 		with (__this) {
 			if (!is_really_a_method(_leave)) {
 				snowstate_error("Invalid command for \"leave\" in change().");
@@ -419,12 +429,28 @@ function SnowState(_initState, _execEnter = true) constructor {
 	};
 	
 	/// @param {bool} [seconds]
-	/// @returns {int} Number of steps (or seconds) the current state has been running for
+	/// @returns {number} Number of steps (or seconds) the current state has been running for
 	get_time = function(_seconds = false) {
 		with (__this) {
 			var _time = (get_timer()-stateStartTime) * 1/1000000;
-			return (_seconds ? _time : floor(_time * game_get_speed(gamespeed_fps)));
+			return (_seconds ? _time : (_time * game_get_speed(gamespeed_fps)));
 		}
+	};
+	
+	/// @param {number} time
+	/// @param {bool} [seconds]
+	/// @returns {SnowState} self
+	set_time = function(_time, _seconds = false) {
+		with (__this) {
+			if (!is_real(_time)) {
+				snowstate_error("Time should be a number");
+				return undefined;
+			}
+			if (!_seconds) _time *= 1/game_get_speed(gamespeed_fps);
+			stateStartTime = get_timer() * 1/1000000 - _time;
+		}
+		
+		return self;
 	};
 	
 	#endregion
@@ -555,6 +581,14 @@ function SnowState(_initState, _execEnter = true) constructor {
 		return self;
 	};
 	
+	/// NOTE: This function is only meant to be used in change()
+	/// @returns {function}
+	event_get_current_function = function() {
+		with (__this) {
+			return tempEvent;	
+		}
+	}
+	
 	/// @param {string} event
 	/// @returns {int} SNOWSTATE_EVENT
 	event_exists = function(_event) {
@@ -678,10 +712,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 		
 		history_add(_initState);
 	}
-
 }
 
-#macro SNOWSTATE_VERSION "v2.9.9999"
+#macro SNOWSTATE_VERSION "v2.9.9999 (dev)"
 #macro SNOWSTATE_DATE "09-10-2021"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");

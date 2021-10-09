@@ -73,27 +73,23 @@ fsm
 			
 			// If left or right keys are pressed, run
 			if (abs(input.hdir)) {
-				fsm.change("run");
-				return;
+				return fsm.change("run");
 			}
 			
 			// If jump key is pressed, jump
 			if (input.jump) {
-				fsm.change("jump");
-				return;
+				return fsm.change("jump");
 			}
 			
 			if (hasSword) {
 				// If attack key is pressed, go into groundAttack1
 				if (input.attack) {
-					fsm.change("groundAttack1");
-					return;
+					return fsm.change("groundAttack1");
 				}
 			
 				// Throw the sword
 				if (input.throwSword && hasSword) {
-					fsm.change("throwSword");
-					return;
+					return fsm.change("throwSword");
 				}
 			} else {
 				// Recall the sword
@@ -109,13 +105,16 @@ fsm
 			
 			// Check if I'm flating
 			if (!on_ground()) {
-				fsm.change("fall");
-				return;
+				return fsm.change("fall");
 			}
+		},
+		leave: function() {
+			show_debug_message("IDLE LEAVE");
 		}
 	})
 	.add("run", {
 		enter: function() {
+			show_debug_message("RUN ENTER");
 			sprite_index = get_sprite();
 			image_speed = 1;
 		},
@@ -127,29 +126,25 @@ fsm
 			
 			// If left and right keys are not pressed, switch back to idle
 			if (_dir == 0) {
-				fsm.change("idle");
-				return;
+				return fsm.change("idle");
 			}
 			
 			face = _dir;
 			
 			// If jump key is pressed, jump
 			if (input.jump) {
-				fsm.change("jump");
-				return;
+				return fsm.change("jump");
 			}
 			
 			if (hasSword) {
 				// If attack key is pressed, go into groundAttack1
 				if (input.attack) {
-					fsm.change("groundAttack1");
-					return;
+					return fsm.change("groundAttack1");
 				}
 			
 				// Throw the sword
-				if (input.throwSword && hasSword) {
-					fsm.change("throwSword");
-					return;
+				if (input.throwSword && hasSword) {					
+					return fsm.change("throwSword");
 				}
 			} else {
 				// Recall the sword
@@ -165,8 +160,7 @@ fsm
 			
 			// Check if I'm flating
 			if (!on_ground()) {
-				fsm.change("fall");
-				return;
+				return fsm.change("fall");
 			}
 		}
 	})
@@ -189,8 +183,7 @@ fsm
 			
 			// Throw the sword
 			if (input.throwSword && hasSword) {
-				fsm.change("throwSword");
-				return;
+				return fsm.change("throwSword");
 			}
 			
 			// Recall the sword
@@ -205,8 +198,7 @@ fsm
 			
 			// Check when we should start falling
 			if (vspd >= 0) {
-				fsm.change("fall");
-				return;
+				return fsm.change("fall");
 			}
 		}
 	})
@@ -237,14 +229,12 @@ fsm
 			if (hasSword) {
 				// If attack key is pressed, go into airAttack1
 				if (input.attack && canAirAttack) {
-					fsm.change("airAttack1");
-					return;
+					return fsm.change("airAttack1");
 				}
 			
 				// Throw the sword
 				if (input.throwSword) {
-					fsm.change("throwSword");
-					return;
+					return fsm.change("throwSword");
 				}
 			} else {
 				// Recall the sword
@@ -258,8 +248,7 @@ fsm
 			if ((fsm.get_time() <= coyoteDuration) && input.jump) {
 				// Apply only if we were running
 				if (fsm.get_previous_state() == "run") {
-					fsm.change("jump");
-					return;
+					return fsm.change("jump");
 				}
 			}
 			
@@ -269,8 +258,7 @@ fsm
 			
 			// Check when we land
 			if (on_ground()) {
-				fsm.change("idle");
-				return;
+				return fsm.change("idle");
 			}
 		}
 	})
@@ -337,8 +325,7 @@ fsm
 		step: function() {
 			// When the animation ends, go to idle state
 			if (animation_end()) {
-				fsm.change("idle");
-				return;
+				return fsm.change("idle");
 			}
 		}
 	})
@@ -361,8 +348,7 @@ fsm
 			
 			// Check when we land
 			if (on_ground()) {
-				fsm.change("idle");
-				return;
+				return fsm.change("idle");
 			}
 			
 			// When the animation ends, go to the next attack state if attack has been pressed
@@ -393,8 +379,7 @@ fsm
 			
 			// When the animation ends, go to fall state again
 			if (animation_end()) {
-				fsm.change("fall");
-				return;
+				return fsm.change("fall");
 			}
 		}
 	})
@@ -417,8 +402,7 @@ fsm
 				var _state = "idle";
 				if (fsm.get_previous_state() == "jump") _state = "fall";
 				if (fsm.get_previous_state() == "fall") _state = "fall";
-				fsm.change(_state);
-				return;
+				return fsm.change(_state);
 			}
 			
 			// Movement
