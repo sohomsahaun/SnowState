@@ -25,13 +25,13 @@ function SnowState(_initState, _execEnter = true) constructor {
 	with (__this) {
 		owner			= _owner;		// Context of the SnowState instances
 		states			= {};			// Struct holding the states
-		stateStartTime	= get_timer();	// Start time of the current state
 		initState		= _initState;	// Initial state of the SnowState instance
 		execEnter		= _execEnter;	// If the "enter" event should be executed by default or not
 		currEvent		= undefined;	// Current event
 		tempEvent		= undefined;	// Temporary event - Used when changing states
 		parent			= {};			// Inheritance tree
 		childQueue		= [];			// Path from root ancestor to current state
+		stateStartTime	= get_timer();	// Start time of the current state (in microseconds)
 		history			= array_create(2, undefined);	// Array holding the history
 		historyMaxSize	= max(0, SNOWSTATE_DEFAULT_HISTORY_MAX_SIZE);	// Maximum size of history
 		historyEnabled	= SNOWSTATE_HISTORY_ENABLED;	// If history is enabled or not
@@ -79,7 +79,10 @@ function SnowState(_initState, _execEnter = true) constructor {
 				
 				// Execute "enter" event
 				if (_name == initState) {
-					if (execEnter) _self.enter();
+					if (execEnter) {
+						//stateStartTime = get_timer()/1000000;
+						_self.enter();
+					}
 				}
 			}
 		});
@@ -485,7 +488,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 				return undefined;
 			}
 			if (!_seconds) _time *= 1/game_get_speed(gamespeed_fps);
-			stateStartTime = get_timer() * 1/1000000 - _time;
+			stateStartTime = get_timer() - _time;
 		}
 		
 		return self;
