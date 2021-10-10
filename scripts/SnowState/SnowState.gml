@@ -753,11 +753,6 @@ function SnowState(_initState, _execEnter = true) constructor {
 		}
 		return (is_string(_name) && variable_struct_exists(__this.triggers, _from) && variable_struct_exists(__this.triggers[$ _from], _name));
 	};
-	
-	enter = function() {
-		__this.execute("enter");
-		return self;
-	};
 
 	/// @returns {SnowState} self
 	enter = function() {
