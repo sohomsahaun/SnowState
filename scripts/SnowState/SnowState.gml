@@ -27,6 +27,8 @@ function SnowState(_initState) constructor {
 	with (__this) {
 		owner			= _owner;
 		states			= {};
+		triggers		= {};
+		wildTriggers	= {};
 		stateStartTime	= get_timer();
 		initState		= _initState;
 		execEnter		= _execEnter;
@@ -95,6 +97,36 @@ function SnowState(_initState) constructor {
 				}
 			}
 		});
+		
+		add_trigger = method(other, function(_name, _from, _to, _condition) {
+			if (!is_string(_name) || (_name == "")) {
+				snowstate_error("Trigger name should be a non-empty string.");
+				return undefined;
+			}
+
+			with (__this) {
+				if (_name == "*") {
+					array_push(wildTriggers[$ _name], {
+						to: _to,
+						condition: _condition,
+					});
+				}
+				else {
+					if(!variable_struct_exists(triggers, _from)) {
+						triggers[$ _from] = {};
+					}
+				
+					if(!variable_struct_exists(triggers[$ _from], _name)) {
+						triggers[$ _from][$ _name] = [];
+					}
+				
+					array_push(triggers[$ _from][$ _name], {
+						to: _to,
+						condition: _condition,
+					});
+				}
+			}
+		})
 	
 		add_event_method = method(other, function(_event) {
 			var _temp = {
@@ -176,7 +208,7 @@ function SnowState(_initState) constructor {
 					if (!variable_struct_exists(_struct, _event)) {
 						_events[$ _event] = {
 							exists: _defEvent.exists,
-							func: method(owner, _defEvent.func)
+							func: method(owner, _defEvent.func),
 						};
 					}
 					++_i;
@@ -185,7 +217,7 @@ function SnowState(_initState) constructor {
 		
 			return _events;
 		});
-	
+
 		execute = method(other, function(_event, _state) {
 			with (__this) {
 				if (_state == undefined) _state = history[@ 0];
@@ -343,6 +375,11 @@ function SnowState(_initState) constructor {
 		return self;
 	};
 	
+	add_trigger = function(_name, _from, _to, _condition) {
+		__this.add_trigger(_name, _from, _to, _condition);
+		return self;
+	}
+
 	change = function(_state, _leave, _enter) {
 		if (_leave == undefined) _leave = -1;
 		if (_enter == undefined) _enter = -1;
@@ -364,6 +401,36 @@ function SnowState(_initState) constructor {
 		}
 		
 		return self;
+	};
+	
+	trigger = function(_name) {
+		var _result = false;
+		
+		var _source = get_current_state();
+		
+		if (trigger_exists(_source, _name)) {
+			_result = try_triggers(__this.triggers[$ _source][$ _name], _source, _name);
+		}
+			
+		if (!_result and trigger_exists("*", _name)) {
+			_result = try_triggers(__this.wildTriggers[$ _name], _source, _name);
+		}
+		
+		return _result;
+	};
+	
+	try_triggers = function(_triggers, _source, _name) {
+		var _len, _trigger, _i;
+		_len = array_length(_triggers);
+		var _i = 0; repeat(_len) {
+			_trigger = _triggers[_i];
+			if (is_undefined(_trigger.condition) or _trigger.condition(_name, _source, _trigger.to)) {
+				change(_trigger.to);
+				return true;
+			}
+			++_i;
+		}
+		return false;
 	};
 	
 	state_is = function(_target, _source) {
@@ -524,6 +591,13 @@ function SnowState(_initState) constructor {
 		} catch(_e) {}
 		
 		return SNOWSTATE_EVENT.NOT_DEFINED;
+	};
+	
+	trigger_exists = function(_from, _name) {
+		if (_from == "*") {
+			return (is_string(_name) && variable_struct_exists(__this.wildTriggers, _name));
+		}
+		return (is_string(_name) && variable_struct_exists(__this.triggers, _from) && variable_struct_exists(__this.triggers[$ _from], _name));
 	};
 	
 	enter = function() {

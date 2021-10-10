@@ -69,49 +69,9 @@ fsm
 			vspd = 0;
 		},
 		step: function() {
-			check_input();
-			
-			// If left or right keys are pressed, run
-			if (abs(input.hdir)) {
-				fsm.change("run");
-				return;
-			}
-			
-			// If jump key is pressed, jump
-			if (input.jump) {
-				fsm.change("jump");
-				return;
-			}
-			
-			if (hasSword) {
-				// If attack key is pressed, go into groundAttack1
-				if (input.attack) {
-					fsm.change("groundAttack1");
-					return;
-				}
-			
-				// Throw the sword
-				if (input.throwSword && hasSword) {
-					fsm.change("throwSword");
-					return;
-				}
-			} else {
-				// Recall the sword
-				if (input.recallSword) {
-					var _sword = instance_find(oSword, 0);
-					_sword.recall();
-				}
-			}
-			
-			// Movement
+			recall_sword();
 			apply_gravity();
 			move_and_collide();
-			
-			// Check if I'm flating
-			if (!on_ground()) {
-				fsm.change("fall");
-				return;
-			}
 		}
 	})
 	.add("run", {
@@ -120,54 +80,10 @@ fsm
 			image_speed = 1;
 		},
 		step: function() {
-			check_input();
-			
-			var _dir = input.hdir;
-			hspd = spd * _dir;
-			
-			// If left and right keys are not pressed, switch back to idle
-			if (_dir == 0) {
-				fsm.change("idle");
-				return;
-			}
-			
-			face = _dir;
-			
-			// If jump key is pressed, jump
-			if (input.jump) {
-				fsm.change("jump");
-				return;
-			}
-			
-			if (hasSword) {
-				// If attack key is pressed, go into groundAttack1
-				if (input.attack) {
-					fsm.change("groundAttack1");
-					return;
-				}
-			
-				// Throw the sword
-				if (input.throwSword && hasSword) {
-					fsm.change("throwSword");
-					return;
-				}
-			} else {
-				// Recall the sword
-				if (input.recallSword) {
-					var _sword = instance_find(oSword, 0);
-					_sword.recall();
-				}
-			}
-			
-			// Movement
+			set_movement();
+			recall_sword();
 			apply_gravity();
 			move_and_collide();
-			
-			// Check if I'm flating
-			if (!on_ground()) {
-				fsm.change("fall");
-				return;
-			}
 		}
 	})
 	.add("jump", {
@@ -185,29 +101,9 @@ fsm
 				image_index = image_number - 1;
 			}
 			
-			check_input();
-			
-			// Throw the sword
-			if (input.throwSword && hasSword) {
-				fsm.change("throwSword");
-				return;
-			}
-			
-			// Recall the sword
-			if (input.recallSword && !hasSword) {
-				var _sword = instance_find(oSword, 0);
-				_sword.recall();
-			}
-			
-			// Movement
+			recall_sword();
 			apply_gravity();
 			move_and_collide();
-			
-			// Check when we should start falling
-			if (vspd >= 0) {
-				fsm.change("fall");
-				return;
-			}
 		}
 	})
 	.add("fall", {
@@ -229,49 +125,10 @@ fsm
 				image_index = image_number - 1;
 			}
 			
-			check_input();
-			var _dir = input.hdir;
-			hspd = spd * _dir;
-			if (_dir != 0) face = _dir;
-			
-			if (hasSword) {
-				// If attack key is pressed, go into airAttack1
-				if (input.attack && canAirAttack) {
-					fsm.change("airAttack1");
-					return;
-				}
-			
-				// Throw the sword
-				if (input.throwSword) {
-					fsm.change("throwSword");
-					return;
-				}
-			} else {
-				// Recall the sword
-				if (input.recallSword) {
-					var _sword = instance_find(oSword, 0);
-					_sword.recall();
-				}
-			}
-			
-			// Coyote time
-			if ((fsm.get_time() <= coyoteDuration) && input.jump) {
-				// Apply only if we were running
-				if (fsm.get_previous_state() == "run") {
-					fsm.change("jump");
-					return;
-				}
-			}
-			
-			// Movement
+			set_movement();
+			recall_sword();
 			apply_gravity();
 			move_and_collide();
-			
-			// Check when we land
-			if (on_ground()) {
-				fsm.change("idle");
-				return;
-			}
 		}
 	})
 	.add("attack", {
@@ -292,8 +149,6 @@ fsm
 			}
 		},
 		step: function() {
-			check_input();
-			
 			// If attack key is pressed any time during the current state,
 			// go to the next attack state after the animation ends
 			if (input.attack) {
@@ -310,38 +165,10 @@ fsm
 			hspd = 0;
 			vspd = 0;
 		},
-			
-		/// @override
-		step: function() {
-			fsm.inherit();
-			
-			// When the animation ends, go to the next attack state if attack has been pressed
-			// Otherwise, just go idle
-			if (animation_end()) {
-				if (nextAttack) {
-					var _state = fsm.get_current_state();
-					var _curr = real(string_digits(_state));
-					var _next = string_letters(_state) + string(_curr+1);
-					fsm.change(_next);
-				} else {
-					fsm.change("idle");
-				}
-				return;
-			}
-		}
 	})
 	.add_child("groundAttack", "groundAttack1")
 	.add_child("groundAttack", "groundAttack2")
-	.add_child("groundAttack", "groundAttack3", {
-		/// @override
-		step: function() {
-			// When the animation ends, go to idle state
-			if (animation_end()) {
-				fsm.change("idle");
-				return;
-			}
-		}
-	})
+	.add_child("groundAttack", "groundAttack3")
 	.add_child("attack", "airAttack", {
 		/// @override
 		enter: function() {
@@ -358,26 +185,6 @@ fsm
 			// Go down, slowly
 			apply_gravity();
 			move_and_collide();
-			
-			// Check when we land
-			if (on_ground()) {
-				fsm.change("idle");
-				return;
-			}
-			
-			// When the animation ends, go to the next attack state if attack has been pressed
-			// Otherwise, just back to falling again
-			if (animation_end()) {
-				if (nextAttack) {
-					var _state = fsm.get_current_state();
-					var _curr = real(string_digits(_state));
-					var _next = string_letters(_state) + string(_curr+1);
-					fsm.change(_next);
-				} else {
-					fsm.change("fall");
-				}
-				return;
-			}
 		},
 		leave: function() {
 			grav = gravGround;	
@@ -390,12 +197,6 @@ fsm
 			// Go down, slowly
 			apply_gravity();
 			move_and_collide();
-			
-			// When the animation ends, go to fall state again
-			if (animation_end()) {
-				fsm.change("fall");
-				return;
-			}
 		}
 	})
 	.add("throwSword", {
@@ -411,16 +212,6 @@ fsm
 			grav = gravAttack;
 		},
 		step: function() {
-			if (animation_end()) {
-				// Switch the state to idle or fall,
-				// depending on what the previous state was
-				var _state = "idle";
-				if (fsm.get_previous_state() == "jump") _state = "fall";
-				if (fsm.get_previous_state() == "fall") _state = "fall";
-				fsm.change(_state);
-				return;
-			}
-			
 			// Movement
 			apply_gravity();
 			move_and_collide();
@@ -436,4 +227,34 @@ fsm
 		leave: function() {
 			grav = gravGround;	
 		}
-	});
+	})
+	.add_trigger("run", "idle", "run")
+	.add_trigger("jump", "idle", "jump")
+	.add_trigger("jump", "run", "jump")
+	.add_trigger("attack", "idle", "groundAttack1", function() { return hasSword })
+	.add_trigger("attack", "run", "groundAttack1", function() { return hasSword })
+	.add_trigger("attack", "fall", "airAttack1", function() { return hasSword and canAirAttack; })
+	.add_trigger("throw", "idle", "throwSword", function() { return hasSword })
+	.add_trigger("throw", "run", "throwSword", function() { return hasSword })
+	.add_trigger("throw", "jump", "throwSword", function() { return hasSword })
+	.add_trigger("throw", "fall", "throwSword", function() { return hasSword })
+	.add_trigger("cyote", "fall", "jump", function() {
+		return fsm.get_time() <= coyoteDuration && fsm.get_previous_state() == "run" && input.jump;
+	})
+	.add_trigger("transition", "idle", "fall", function() { return !on_ground(); })
+	.add_trigger("transition", "run", "fall", function() { return !on_ground(); })
+	.add_trigger("transition", "jump", "fall", function() { return vspd >= 0; })
+	.add_trigger("transition", "run", "idle", function() { return input.hdir == 0; })
+	.add_trigger("transition", "fall", "idle", function() { return on_ground(); })
+	.add_trigger("transition", "airAttack", "idle", function() { return on_ground(); })
+	.add_trigger("transition", "groundAttack1", "groundAttack2", function() { return animation_end() && nextAttack })
+	.add_trigger("transition", "groundAttack1", "idle", function() { return animation_end() })
+	.add_trigger("transition", "groundAttack2", "groundAttack3", function() { return animation_end() && nextAttack })
+	.add_trigger("transition", "groundAttack2", "idle", function() { return animation_end() })
+	.add_trigger("transition", "groundAttack3", "idle", function() { return animation_end() })
+	.add_trigger("transition", "airAttack1", "airAttack2", function() { return animation_end() && nextAttack })
+	.add_trigger("transition", "airAttack1", "fall", function() { return animation_end() })
+	.add_trigger("transition", "airAttack2", "fall", function() { return animation_end() })
+	.add_trigger("transition", "throwSword", "jump", function() { return animation_end() && fsm.get_previous_state() == "jump" })
+	.add_trigger("transition", "throwSword", "fall", function() { return animation_end() && fsm.get_previous_state() == "fall" })
+	.add_trigger("transition", "throwSword", "idle", function() { return animation_end() });
