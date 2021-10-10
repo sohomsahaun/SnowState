@@ -44,6 +44,12 @@ apply_gravity = function() {
 	vspd = min(vspd+grav, vspdMax);
 };
 
+set_movement = function() {
+	var _dir = input.hdir;
+	hspd = spd * _dir;
+	if (_dir != 0) face = _dir;
+};
+
 move_and_collide = function() {
 	if (place_meeting(x+hspd, y, oWall)) {
 		while (!place_meeting(x+sign(hspd), y, oWall)) x += sign(hspd);
@@ -68,4 +74,11 @@ spawn_sword = function() {
 equip_sword = function() {
 	hasSword = true;
 	sprite_index = get_sprite();
+};
+
+recall_sword = function() {
+	if (!hasSword and input.recallSword) {
+		var _sword = instance_find(oSword, 0);
+		_sword.recall();
+	}	
 };
