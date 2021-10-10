@@ -91,7 +91,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 		
 		/// @param {string} name
 		/// @param {string} from
-		/// @param {string} to
+		/// @param {string/array} to
 		/// @param {function} condition
 		add_trigger = method(other, function(_name, _from, _to, _condition) {
 			with (__this) {
@@ -102,18 +102,28 @@ function SnowState(_initState, _execEnter = true) constructor {
 					});
 				}
 				else {
-					if(!variable_struct_exists(triggers, _from)) {
-						triggers[$ _from] = {};
-					}
+                    
+                    if (!is_array(_from)) _from = [_from];                    
+                    var _len = array_length(_from);                    
+                    var _i = 0; repeat (_len) {
+                    
+                        _index = _from[_i];
+                    
+    					if (!variable_struct_exists(triggers, _index)) {
+    						triggers[$ _index] = {};
+    					}
 				
-					if(!variable_struct_exists(triggers[$ _from], _name)) {
-						triggers[$ _from][$ _name] = [];
-					}
+    					if (!variable_struct_exists(triggers[$ _index], _name)) {
+    						triggers[$ _index][$ _name] = [];
+    					}
 				
-					array_push(triggers[$ _from][$ _name], {
-						to: _to,
-						condition: _condition,
-					});
+    					array_push(triggers[$ _index][$ _name], {
+    						to: _to,
+    						condition: _condition,
+    					});
+                    
+                        ++_i;
+                    }
 				}
 			}
 		})
