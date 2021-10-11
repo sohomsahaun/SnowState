@@ -54,7 +54,7 @@ fsm = new SnowState("idle");
 
 fsm
 	.history_enable()
-	.set_history_max_size(20)
+	.history_set_max_size(20)
 	.event_set_default_function("draw", function() {
 		// Draw this no matter what state we are in
 		// (Unless it is overridden, ofcourse)
