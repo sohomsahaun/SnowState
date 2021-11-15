@@ -29,11 +29,11 @@
   "properties": [],
   "overriddenProperties": [],
   "parent": {
-    "name": "Objects",
-    "path": "folders/Objects.yy",
+    "name": "Demo Objects - Triggered Transitions",
+    "path": "folders/Demo Objects - Triggered Transitions.yy",
   },
   "resourceVersion": "1.0",
-  "name": "oSword",
+  "name": "oSwordT",
   "tags": [],
   "resourceType": "GMObject",
 }

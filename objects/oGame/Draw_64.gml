@@ -27,8 +27,9 @@ if (showHistory) {
 	_x = 10;
 	_y = 10;
 
-	var _str, _states, _i;
-	_states = oPlayer.fsm.history_get();
+	var _player, _states, _str, _i, _col;
+	_player = (DEMO == "D") ? oPlayerD : oPlayerT;
+	_states = _player.fsm.history_get();
 	_str = "groundAttack3";
 	
 	draw_set_alpha(.9);
@@ -36,11 +37,15 @@ if (showHistory) {
 						 c_black, c_black, c_black, c_black, 0);
 	draw_set_alpha(1);
 	
-	draw_text_outline(_x, _y, "HISTORY", c_white, c_black, _thickness);
+	draw_text_color(_x, _y, "HISTORY", c_white, c_white, c_white, c_white, 1);
 	_y += 10;
 	
+	_col = c_white;
 	_i = 0; repeat (array_length(_states)) {
-		_y += _diff; draw_text_outline(_x, _y, _states[@ _i], c_white, c_black, _thickness);
+		_str = _states[_i];
+		_y += _diff;
+		draw_text_color(_x, _y, _str, _col, _col, _col, _col, 1);
+		_col = c_gray;
 		++_i;
 	}
 }

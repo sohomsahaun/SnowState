@@ -69,8 +69,6 @@ fsm
 			vspd = 0;
 		},
 		step: function() {
-			check_input();
-			
 			// If left or right keys are pressed, run
 			if (abs(input.hdir)) {
 				fsm.change("run");
@@ -97,10 +95,7 @@ fsm
 				}
 			} else {
 				// Recall the sword
-				if (input.recallSword) {
-					var _sword = instance_find(oSword, 0);
-					_sword.recall();
-				}
+				recall_sword();
 			}
 			
 			// Movement
@@ -120,8 +115,6 @@ fsm
 			image_speed = 1;
 		},
 		step: function() {
-			check_input();
-			
 			var _dir = input.hdir;
 			hspd = spd * _dir;
 			
@@ -153,10 +146,7 @@ fsm
 				}
 			} else {
 				// Recall the sword
-				if (input.recallSword) {
-					var _sword = instance_find(oSword, 0);
-					_sword.recall();
-				}
+				recall_sword();
 			}
 			
 			// Movement
@@ -185,8 +175,6 @@ fsm
 				image_index = image_number - 1;
 			}
 			
-			check_input();
-			
 			// Throw the sword
 			if (input.throwSword && hasSword) {
 				fsm.change("throwSword");
@@ -194,10 +182,7 @@ fsm
 			}
 			
 			// Recall the sword
-			if (input.recallSword && !hasSword) {
-				var _sword = instance_find(oSword, 0);
-				_sword.recall();
-			}
+			recall_sword();
 			
 			// Movement
 			apply_gravity();
@@ -229,7 +214,6 @@ fsm
 				image_index = image_number - 1;
 			}
 			
-			check_input();
 			var _dir = input.hdir;
 			hspd = spd * _dir;
 			if (_dir != 0) face = _dir;
@@ -248,14 +232,11 @@ fsm
 				}
 			} else {
 				// Recall the sword
-				if (input.recallSword) {
-					var _sword = instance_find(oSword, 0);
-					_sword.recall();
-				}
+				recall_sword();
 			}
 			
 			// Coyote time
-			if ((fsm.get_time() <= coyoteDuration) && input.jump) {
+			if ((fsm.get_time(false) <= coyoteDuration) && input.jump) {
 				// Apply only if we were running
 				if (fsm.get_previous_state() == "run") {
 					fsm.change("jump");
@@ -292,8 +273,6 @@ fsm
 			}
 		},
 		step: function() {
-			check_input();
-			
 			// If attack key is pressed any time during the current state,
 			// go to the next attack state after the animation ends
 			if (input.attack) {

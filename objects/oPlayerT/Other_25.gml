@@ -44,6 +44,12 @@ apply_gravity = function() {
 	vspd = min(vspd+grav, vspdMax);
 };
 
+set_movement = function() {
+	var _dir = input.hdir;
+	hspd = spd * _dir;
+	if (_dir != 0) face = _dir;
+};
+
 move_and_collide = function() {
 	if (place_meeting(x+hspd, y, oWall)) {
 		while (!place_meeting(x+sign(hspd), y, oWall)) x += sign(hspd);
@@ -58,14 +64,21 @@ move_and_collide = function() {
 };
 
 spawn_sword = function() {
-	with (instance_create_depth(x+6*face, y-14, depth, oSword)) {
+	with (instance_create_depth(x+6*face, y-14, depth, oSwordT)) {
 		owner = other.id;
 		face  = owner.face;
-		fsm.change("spinning");
+		fsm.trigger("t_spin");
 	}
 };
 
 equip_sword = function() {
 	hasSword = true;
 	sprite_index = get_sprite();
+};
+
+recall_sword = function() {
+	if (!hasSword && input.recallSword) {
+		var _sword = instance_find(oSwordT, 0);
+		_sword.recall();
+	}	
 };

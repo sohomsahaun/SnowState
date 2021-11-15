@@ -5,7 +5,7 @@ width = 480;
 height = 270;
 
 targetPos = [x,y];
-targetInst = oPlayer;
+targetInst = (DEMO == "D") ? oPlayerD : oPlayerT;
 rate = 2;
 
 // Resize window and app surface
