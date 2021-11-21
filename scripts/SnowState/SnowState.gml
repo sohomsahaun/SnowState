@@ -1,5 +1,5 @@
 /**
-*	SnowState | v3.0.0
+*	SnowState | v3.0.1
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki
 *
 *	Author: Sohom Sahaun | @sohomsahaun
@@ -621,26 +621,25 @@ function SnowState(_initState, _execEnter = true) constructor {
 		}
 	};
 	
-	/// @param {bool} [seconds]
-	/// @returns {number} Number of steps (or seconds) the current state has been running for
-	get_time = function(_seconds = true) {
+	/// @param {bool} [in_miliseconds]
+	/// @returns {number} Number of miliseconds (or steps) the current state has been running for
+	get_time = function(_ms = true) {
 		with (__this) {
-			var _time = (get_timer()-stateStartTime) * 1/1000000;
-			return (_seconds ? _time : (_time * game_get_speed(gamespeed_fps)));
+			var _time = (get_timer()-stateStartTime);
+			return (_ms ? _time : (_time * game_get_speed(gamespeed_fps) * 1/1000000));
 		}
 	};
 	
 	/// @param {number} time
-	/// @param {bool} [seconds]
+	/// @param {bool} [in_miliseconds]
 	/// @returns {SnowState} self
-	set_time = function(_time, _seconds = true) {
+	set_time = function(_time, _ms = true) {
 		with (__this) {
 			if (!is_real(_time)) {
 				snowstate_error("Time should be a number");
 				return undefined;
 			}
-			if (!_seconds) _time *= 1/game_get_speed(gamespeed_fps);
-			stateStartTime = get_timer() - _time;
+			stateStartTime = get_timer() - (_ms ? _time : (_time * 1/game_get_speed(gamespeed_fps) * 1000000));
 		}
 		
 		return self;
@@ -1040,7 +1039,7 @@ if (!is_string(SNOWSTATE_REFLEXIVE_TRANSITION_NAME) || (string_length(SNOWSTATE_
 }
 
 // Some info
-#macro SNOWSTATE_VERSION "v3.0.0"
-#macro SNOWSTATE_DATE "15-11-2021"
+#macro SNOWSTATE_VERSION "v3.0.1"
+#macro SNOWSTATE_DATE "22-11-2021"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");
