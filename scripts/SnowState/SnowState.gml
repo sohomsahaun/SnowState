@@ -621,8 +621,8 @@ function SnowState(_initState, _execEnter = true) constructor {
 		}
 	};
 	
-	/// @param {bool} [in_miliseconds]
-	/// @returns {number} Number of miliseconds (or steps) the current state has been running for
+	/// @param {bool} [in_microseconds]
+	/// @returns {number} Number of microseconds (or steps) the current state has been running for
 	get_time = function(_ms = true) {
 		with (__this) {
 			var _time = (get_timer()-stateStartTime);
@@ -631,7 +631,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 	};
 	
 	/// @param {number} time
-	/// @param {bool} [in_miliseconds]
+	/// @param {bool} [in_microseconds]
 	/// @returns {SnowState} self
 	set_time = function(_time, _ms = true) {
 		with (__this) {
