@@ -1,4 +1,4 @@
-<h1 align="center">SnowState 3.0.1</h1>
+<h1 align="center">SnowState 3.0.2</h1>
 <p align="center">@sohomsahaun</p>
 
 ---

@@ -1,5 +1,5 @@
 /**
-*	SnowState | v3.0.1
+*	SnowState | v3.0.2
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki
 *
 *	Author: Sohom Sahaun | @sohomsahaun
@@ -78,7 +78,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 					// Replace parent's events with defined ones
 					_events = variable_struct_get_names(_struct);
 					_i = 0; repeat (array_length(_events)) {
-						_event = _events[@ _i];
+						_event = _events[_i];
 						_state[$ _event] = {
 							exists: SNOWSTATE_EVENT.DEFINED,
 							func: method(owner, _struct[$ _event])
@@ -150,10 +150,13 @@ function SnowState(_initState, _execEnter = true) constructor {
 				event: _event
 			};
 			self[$ _event] = method(_temp, function() {
-				var _args = array_create(argument_count);
-				var _i = 0; repeat(argument_count) {
-					_args[_i] = argument[_i];
-					++_i;
+				var _args = undefined;
+				if (argument_count > 0) {
+					_args = array_create(argument_count);
+					var _i = 0; repeat(argument_count) {
+						_args[_i] = argument[_i];
+						++_i;
+					}
 				}
 				exec(event, undefined, _args);
 			});
@@ -201,7 +204,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 				
 				var _name, _i;
 				_i = 0; repeat (array_length(invalidStateNames)) {
-					_name = invalidStateNames[@ _i]; ++_i;
+					_name = invalidStateNames[_i]; ++_i;
 					if (_state == _name) {
 						if (_func != undefined) _func("State name can not be \"", _name, "\".");
 						return false;
@@ -250,7 +253,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 				
 				// Add to history
 				if (array_length(childQueue) > 0) {
-					history[@ 0] = childQueue[@ 0];
+					history[@ 0] = childQueue[0];
 					childQueue = [];
 				}
 				
@@ -281,7 +284,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 			with (__this) {
 				_arr = variable_struct_get_names(_struct);
 				_i = 0; repeat(array_length(_arr)) {
-					_event = _arr[@ _i];
+					_event = _arr[_i];
 					assert_event_name_valid(_event);
 					assert_event_available(_event);
 					_events[$ _event] = {
@@ -293,7 +296,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 		
 				_arr = variable_struct_get_names(defaultEvents);
 				_i = 0; repeat(array_length(_arr)) {
-					_event = _arr[@ _i];
+					_event = _arr[_i];
 					_defEvent = defaultEvents[$ _event];
 					if (!variable_struct_exists(_struct, _event)) {
 						_events[$ _event] = {
@@ -312,7 +315,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 		/// @param {string} [state_name]
 		/// @param {array} [args]
 		/// @returns {SnowState} self
-		execute = method(other, function(_event, _state = __this.history[@ 0], _args = []) {
+		execute = method(other, function(_event, _state = __this.history[0], _args = undefined) {
 			with (__this) {
 				if (!is_state_defined(_state)) {
 					snowstate_error("State \"", _state, "\" is not defined.");
@@ -321,7 +324,10 @@ function SnowState(_initState, _execEnter = true) constructor {
 				
 				currEvent = _event;
 				var _func = states[$ _state][$ _event].func;
-				with (owner) script_execute_ext(method_get_index(_func), _args);
+				with (owner) {
+					if (_args == undefined) _func();
+						else script_execute_ext(method_get_index(_func), _args);
+				}
 			}
 			
 			return self;
@@ -330,8 +336,8 @@ function SnowState(_initState, _execEnter = true) constructor {
 		/// @returns {string} The current state
 		get_current_state = method(other, function() {
 			with (__this) {
-				var _state = ((array_length(history) > 0) ? history[@ 0] : undefined);
-				if (array_length(childQueue) > 0) _state = childQueue[@ 0];
+				var _state = ((array_length(history) > 0) ? history[0] : undefined);
+				if (array_length(childQueue) > 0) _state = childQueue[0];
 				return _state;
 			}
 		});
@@ -341,15 +347,15 @@ function SnowState(_initState, _execEnter = true) constructor {
 		history_add = method(other, function(_state) {
 			with (__this) {
 				if (historyEnabled) {
-					if (history[@ 1] == undefined) {
-						history[@ 1] = history[@ 0];
+					if (history[1] == undefined) {
+						history[@ 1] = history[0];
 						history[@ 0] = _state;
 					} else {
 						array_insert(history, 0, _state);
 						history_fit_contents();
 					}
 				} else {
-					history[@ 1] = history[@ 0];
+					history[@ 1] = history[0];
 					history[@ 0] = _state;
 				}
 			}
@@ -454,7 +460,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 			with (__this) {
 				var _transition, _dest, _i;
 				_i = 0; repeat(array_length(_transitions)) {
-					_transition = _transitions[@ _i]; ++_i;
+					_transition = _transitions[_i]; ++_i;
 					
 					// For reflexive wildcard transitions, change to source
 					_dest = _transition.to;
@@ -482,7 +488,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 				
 				_events = variable_struct_get_names(_parent);
 				_i = 0; repeat (array_length(_events)) {
-					_event = _events[@ _i];
+					_event = _events[_i];
 					_parEvent = _parent[$ _event];
 					
 					_exists = SNOWSTATE_EVENT.NOT_DEFINED;
@@ -513,9 +519,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 				_events = variable_struct_get_names(defaultEvents);
 		
 				_i = 0; repeat(array_length(_states)) {
-					_state = states[$ _states[@ _i]];
+					_state = states[$ _states[_i]];
 					_j = 0; repeat(array_length(_events)) {
-						_event = _events[@ _j];
+						_event = _events[_j];
 						if (!variable_struct_exists(_state, _event)) {
 							_defEvent = defaultEvents[$ _event];
 							_state[$ _event] = {
@@ -600,6 +606,14 @@ function SnowState(_initState, _execEnter = true) constructor {
 		return false;
 	};
 	
+	/// @param {string} state_name
+	/// @returns {bool} Whether state_name exists (true), or not (false)
+	state_exists = function(_state) {
+		with (__this) {
+			return variable_struct_exists(states, _state);
+		}
+	};
+	
 	/// @returns {array} Array containing the states defined
 	get_states = function() {
 		with (__this) {
@@ -617,7 +631,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @returns {string} The previous state
 	get_previous_state = function() {
 		with (__this) {
-			return ((array_length(history) > 1) ? history[@ 1] : undefined);
+			return ((array_length(history) > 1) ? history[1] : undefined);
 		}
 	};
 	
@@ -696,7 +710,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @returns {SnowState} self
 	inherit = function() {
 		with (__this) {
-			var _state = history[@ 0];
+			var _state = history[0];
 			
 			if (!variable_struct_exists(parent, _state)) {
 				if (SNOWSTATE_DEBUG_WARNING) {
@@ -710,7 +724,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 				_len = array_length(childQueue);
 				_str = "";
 				_i = 0; repeat (_len) {
-					if (childQueue[@ _i] == _state) break;
+					if (childQueue[_i] == _state) break;
 					++_i;
 				}
 				
@@ -718,7 +732,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 					_str += string(_state);
 					repeat (_len-_i-1) {
 						++_i;
-						_str += " -> " + string(childQueue[@ _i]);
+						_str += " -> " + string(childQueue[_i]);
 					}
 					_str += " -> " + string(_state);
 					snowstate_error("Circular inheritance found. Inheritance chain: ",
@@ -851,7 +865,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 			
 			var _i, _from;
 			_i = 0; repeat (array_length(_source)) {
-				_from = _source[@ _i]; ++_i;
+				_from = _source[_i]; ++_i;
 				if (!is_string(_from) || (_from == "")) {
 					if (SNOWSTATE_DEBUG_WARNING) {
 						snowstate_trace("State name should be a non-empty string. Transition not added.");	
@@ -1039,7 +1053,7 @@ if (!is_string(SNOWSTATE_REFLEXIVE_TRANSITION_NAME) || (string_length(SNOWSTATE_
 }
 
 // Some info
-#macro SNOWSTATE_VERSION "v3.0.1"
-#macro SNOWSTATE_DATE "22-11-2021"
+#macro SNOWSTATE_VERSION "v3.0.2"
+#macro SNOWSTATE_DATE "25-01-2022"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");
