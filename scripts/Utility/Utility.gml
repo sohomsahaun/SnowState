@@ -9,8 +9,7 @@ function animation_end() {
 }
 
 /// @func lerp_smooth(val1, val2, amount, [offset])
-function lerp_smooth(_val1, _val2, _amount, _offset) {
-	if (_offset == undefined) _offset = .01;
+function lerp_smooth(_val1, _val2, _amount, _offset = 0.01) {
 	return ((abs(_val1-_val2) <= _offset) ? _val2 : lerp(_val1, _val2, 1/_amount));
 }
 
