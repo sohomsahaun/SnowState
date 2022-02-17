@@ -422,6 +422,36 @@ function SnowState(_initState, _execEnter = true) constructor {
 		return SNOWSTATE_TRIGGER.NOT_DEFINED;
 	});
 	
+	/// @param {string} transition_name
+	/// @returns {bool} Whether the transition has been triggered (true), or not (false)
+	__trigger = function(_transitionName) {
+		if (!__assert_transition_name_valid(_transitionName)) return false;
+			
+		var _currState, _source;
+		_currState = __get_current_state();
+		_source    = _currState;
+			
+		// My triggers
+		if (__transition_exists(_transitionName, _source) == SNOWSTATE_TRIGGER.DEFINED) {
+			if (__try_triggers(__transitions[$ _source][$ _transitionName], _currState, _transitionName)) return true;
+		}
+				
+		// Wild triggers
+		if (__transition_exists(_transitionName, SNOWSTATE_WILDCARD_TRANSITION_NAME) == SNOWSTATE_TRIGGER.DEFINED) {
+			if (__try_triggers(__wildTransitions[$ _transitionName], _currState, _transitionName)) return true;
+		}
+			
+		// Parent triggers
+		while (variable_struct_exists(__parent, _source)) {
+			_source = __parent[$ _source];
+			if (__transition_exists(_transitionName, _source) == SNOWSTATE_TRIGGER.DEFINED) {
+				if (__try_triggers(__transitions[$ _source][$ _transitionName], _currState, _transitionName)) return true;
+			}
+		}
+			
+		return false;
+	};
+	
 	/// @param {array} transitions
 	/// @param {string} source_state
 	/// @param {string} trigger_name
@@ -833,41 +863,28 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @param {string} source_state
 	/// @returns {int} SNOWSTATE_TRIGGER
 	transition_exists = function(_transitionName, _source) {
-		if (!__assert_state_name_valid(_source, false)) return false;
+		if (!is_string(_transitionName)) return false;
+		if (!is_string(_source)) return false;
+		if (_source == SNOWSTATE_WILDCARD_TRANSITION_NAME) return true;
+		
 		if (!__assert_transition_name_valid(_transitionName, false)) return false;
 			
 		return __transition_exists(_transitionName, _source);
 	};
 	
-	/// @param {string} transition_name
-	/// @returns {bool} Whether the transition has been triggered (true), or not (false)
-	trigger = function(_transitionName) {
-		if (!__assert_transition_name_valid(_transitionName)) return false;
-			
-		var _currState, _source;
-		_currState = __get_current_state();
-		_source    = _currState;
-			
-		// My triggers
-		if (__transition_exists(_transitionName, _source) == SNOWSTATE_TRIGGER.DEFINED) {
-			if (__try_triggers(__transitions[$ _source][$ _transitionName], _currState, _transitionName)) return true;
-		}
-				
-		// Wild triggers
-		if (__transition_exists(_transitionName, SNOWSTATE_WILDCARD_TRANSITION_NAME) == SNOWSTATE_TRIGGER.DEFINED) {
-			if (__try_triggers(__wildTransitions[$ _transitionName], _currState, _transitionName)) return true;
-		}
-			
-		// Parent triggers
-		while (variable_struct_exists(__parent, _source)) {
-			_source = __parent[$ _source];
-			if (__transition_exists(_transitionName, _source) == SNOWSTATE_TRIGGER.DEFINED) {
-				if (__try_triggers(__transitions[$ _source][$ _transitionName], _currState, _transitionName)) return true;
+	/// @param {string|array} transition_name
+	/// @returns {bool} Whether a transition has been triggered (true), or not (false)
+	trigger = function(_transition) {
+		if (is_array(_transition)) {
+			var _i = 0; repeat (array_length(_transition)) {
+				if (__trigger(_transition[_i])) return true;
+				++_i;
 			}
+			return false;
+		} else {
+			return __trigger(_transition);
 		}
-			
-		return false;
-	};
+	}
 
 	#endregion
 	
