@@ -845,7 +845,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @param {function} [leave_func]
 	/// @param {function} [enter_func]
 	/// @returns {SnowState} self
-	add_wildcard_transition = function(_transitionName, _dest, _condition = function() { return true; }, _leave, _enter) {
+	add_wildcard_transition = function(_transitionName, _dest, _condition = function() { return true; }, _leave = undefined, _enter = undefined) {
 		return add_transition(_transitionName, SNOWSTATE_WILDCARD_TRANSITION_NAME, _dest, _condition, _leave, _enter);
 	};
 	
@@ -855,7 +855,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @param {function} [leave_func]
 	/// @param {function} [enter_func]
 	/// @returns {SnowState} self
-	add_reflexive_transition = function(_transitionName, _source, _condition = function() { return true; }, _leave, _enter) {
+	add_reflexive_transition = function(_transitionName, _source, _condition = function() { return true; }, _leave = undefined, _enter = undefined) {
 		return add_transition(_transitionName, _source, SNOWSTATE_REFLEXIVE_TRANSITION_NAME, _condition, _leave, _enter);
 	};
 	
