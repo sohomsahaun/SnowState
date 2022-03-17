@@ -637,23 +637,23 @@ function SnowState(_initState, _execEnter = true) constructor {
 	
 	/// @param {bool} [in_microseconds]
 	/// @returns {number} Number of microseconds (or steps) the current state has been running for
-	get_time = function(_ms = true) {
+	get_time = function(_us = true) {
 		with (__this) {
 			var _time = (get_timer()-stateStartTime);
-			return (_ms ? _time : (_time * game_get_speed(gamespeed_fps) * 1/1000000));
+			return (_us ? _time : (_time * game_get_speed(gamespeed_fps) * 1/1000000));
 		}
 	};
 	
 	/// @param {number} time
 	/// @param {bool} [in_microseconds]
 	/// @returns {SnowState} self
-	set_time = function(_time, _ms = true) {
+	set_time = function(_time, _us = true) {
 		with (__this) {
 			if (!is_real(_time)) {
 				snowstate_error("Time should be a number");
 				return undefined;
 			}
-			stateStartTime = get_timer() - (_ms ? _time : (_time * 1/game_get_speed(gamespeed_fps) * 1000000));
+			stateStartTime = get_timer() - (_us ? _time : (_time * 1/game_get_speed(gamespeed_fps) * 1000000));
 		}
 		
 		return self;
