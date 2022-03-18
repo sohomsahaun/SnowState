@@ -26,21 +26,22 @@ function SnowState(_initState, _execEnter = true) constructor {
 	}
 	
 	var _owner = other;
-	__owner			= _owner;		// Context of the SnowState instances
+	__owner				= _owner;		// Context of the SnowState instances
 	__states			= {};			// Struct holding states
 	__transitions		= {};			// Struct holding transitions
 	__wildTransitions	= {};			// Struct holding wildcard transitions
-	__initState		= _initState;	// Initial state of the SnowState instance
-	__execEnter		= _execEnter;	// If the "enter" event should be executed by default or not
-	__currEvent		= undefined;	// Current event
-	__tempEvent		= undefined;	// Temporary event - Used when changing states
+	__on_events			= {};			// Struct holding events for .on()
+	__initState			= _initState;	// Initial state of the SnowState instance
+	__execEnter			= _execEnter;	// If the "enter" event should be executed by default or not
+	__currEvent			= undefined;	// Current event
+	__tempEvent			= undefined;	// Temporary event - Used when changing states
 	__parent			= {};			// Inheritance tree
 	__childQueue		= [];			// Path from current state to it's ancestor(s)
 	__stateStartTime	= get_timer();	// Start time of the current state (in microseconds)
 	__history			= array_create(2, undefined);	// Array holding the history
 	__historyMaxSize	= max(0, SNOWSTATE_DEFAULT_HISTORY_MAX_SIZE);	// Maximum size of history
 	__historyEnabled	= SNOWSTATE_HISTORY_ENABLED;	// If history is enabled or not
-	__defaultEvents	= {		// Default functions for events
+	__defaultEvents		= {		// Default functions for events
 		enter: {
 			exists: SNOWSTATE_EVENT.NOT_DEFINED,
 			func: function() {}
@@ -54,6 +55,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 		SNOWSTATE_WILDCARD_TRANSITION_NAME,
 		SNOWSTATE_REFLEXIVE_TRANSITION_NAME,
 	];
+	
+	// Add .on() events
+	__on_events[$ "state changed"] = undefined;
 		
 	/// @param {string} state_name
 	/// @param {struct} state_struct
@@ -222,7 +226,33 @@ function SnowState(_initState, _execEnter = true) constructor {
 				
 		return true;
 	});
+	
+	/// @param {string} event
+	/// @param {array<any>} [args]
+	/// @returns {SnowState} self
+	__broadcast_event = method(self, function(_event, _args) {
+		var _func = __on_events[$ _event];
+		if (_func != undefined) {
+			switch (array_length(_args)) {
+				case  0: _func(); break;
+				case  1: _func(_args[0]); break;
+				case  2: _func(_args[0], _args[1]); break;
+				case  3: _func(_args[0], _args[1], _args[2]); break;
+				case  4: _func(_args[0], _args[1], _args[2], _args[3]); break;
+				case  5: _func(_args[0], _args[1], _args[2], _args[3], _args[4]); break;
+				case  6: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5]); break;
+				case  7: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6]); break;
+				case  8: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7]); break;
+				case  9: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8]); break;
+				case 10: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9]); break;
+				case 11: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10]); break;
+				default: __snowstate_trace("Whoa hello there!"); break;
+			}
+		}
 		
+		return self;
+	});
+	
 	/// @param {string} state_name
 	/// @param {function} leave_func
 	/// @param {function} enter_func
@@ -468,6 +498,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 			// Check condition
 			if (_transition.condition(_trigger, _source, _dest)) {
 				__change(_dest, _transition.leave, _transition.enter);
+				__broadcast_event("state changed", [_source, _dest, _trigger]);
 				return true;
 			}
 		}
@@ -571,7 +602,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 			return undefined;
 		}
 		
+		var _source = get_current_state();
 		__change(_state, _leave, _enter);
+		__broadcast_event("state changed", [_state, _source]);
 		
 		return self;
 	};
@@ -634,6 +667,30 @@ function SnowState(_initState, _execEnter = true) constructor {
 		return self;
 	};
 	
+	/// @param {string} event
+	/// @param {string} callback
+	/// @param {struct} [context=noone]
+	/// @returns {SnowState} self
+	on = function(_event, _callback, _context = noone) {
+		if (!is_string(_event)) {
+			__snowstate_error("Event name should be a string.");
+			return undefined;
+		}
+		
+		if (!__is_really_a_method(_callback)) {
+			__snowstate_error("Callback should be a string.");
+			return undefined;
+		}
+		
+		if (variable_struct_exists(__on_events, _event)) {
+			if (_context != noone) _callback = method(_context, _callback);
+			__on_events[$ _event] = _callback;
+		} else if (SNOWSTATE_DEBUG_WARNING) {
+			__snowstate_trace("Event \"", _event, "\" does not exist.");
+		}
+		
+		return self;
+	};
 	#endregion
 	
 	#region Inheritance
@@ -978,6 +1035,6 @@ if (!is_string(SNOWSTATE_REFLEXIVE_TRANSITION_NAME) || (string_length(SNOWSTATE_
 
 // Some info
 #macro SNOWSTATE_VERSION "v3.0.9999 (dev)"
-#macro SNOWSTATE_DATE "17-02-2022"
+#macro SNOWSTATE_DATE "18-03-2022"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");
