@@ -59,7 +59,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"bgBigCloud","path":"sprites/bgBigCloud/bgBigCloud.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "bgBigCloud",
     "tags": [],
     "resourceType": "GMSequence",

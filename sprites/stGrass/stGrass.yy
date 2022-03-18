@@ -59,7 +59,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"stGrass","path":"sprites/stGrass/stGrass.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "stGrass",
     "tags": [],
     "resourceType": "GMSequence",

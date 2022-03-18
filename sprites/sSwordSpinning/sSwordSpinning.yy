@@ -71,7 +71,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sSwordSpinning","path":"sprites/sSwordSpinning/sSwordSpinning.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sSwordSpinning",
     "tags": [],
     "resourceType": "GMSequence",

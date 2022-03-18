@@ -59,7 +59,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"stTerrain","path":"sprites/stTerrain/stTerrain.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "stTerrain",
     "tags": [],
     "resourceType": "GMSequence",

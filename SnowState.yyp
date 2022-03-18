@@ -105,9 +105,9 @@
   ],
   "IncludedFiles": [],
   "MetaData": {
-    "IDEVersion": "2022.1.1.610",
+    "IDEVersion": "2022.2.0.614",
   },
-  "resourceVersion": "1.4",
+  "resourceVersion": "1.5",
   "name": "SnowState",
   "tags": [],
   "resourceType": "GMProject",

@@ -71,7 +71,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sWaterReflection","path":"sprites/sWaterReflection/sWaterReflection.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sWaterReflection",
     "tags": [],
     "resourceType": "GMSequence",

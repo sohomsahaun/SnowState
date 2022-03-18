@@ -59,7 +59,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sSmallCloud2","path":"sprites/sSmallCloud2/sSmallCloud2.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sSmallCloud2",
     "tags": [],
     "resourceType": "GMSequence",

@@ -59,7 +59,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"stFrontTreeBody","path":"sprites/stFrontTreeBody/stFrontTreeBody.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "stFrontTreeBody",
     "tags": [],
     "resourceType": "GMSequence",

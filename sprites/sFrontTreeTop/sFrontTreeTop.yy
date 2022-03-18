@@ -71,7 +71,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sFrontTreeTop","path":"sprites/sFrontTreeTop/sFrontTreeTop.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sFrontTreeTop",
     "tags": [],
     "resourceType": "GMSequence",

@@ -67,7 +67,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sSwordEffectAttack3","path":"sprites/sSwordEffectAttack3/sSwordEffectAttack3.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sSwordEffectAttack3",
     "tags": [],
     "resourceType": "GMSequence",

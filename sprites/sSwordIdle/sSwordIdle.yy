@@ -87,7 +87,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sSwordIdle","path":"sprites/sSwordIdle/sSwordIdle.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sSwordIdle",
     "tags": [],
     "resourceType": "GMSequence",
