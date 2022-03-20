@@ -232,23 +232,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @returns {SnowState} self
 	__broadcast_event = function(_event, _args) {
 		var _func = __on_events[$ _event];
-		if (_func != undefined) {
-			switch (array_length(_args)) {
-				case  0: _func(); break;
-				case  1: _func(_args[0]); break;
-				case  2: _func(_args[0], _args[1]); break;
-				case  3: _func(_args[0], _args[1], _args[2]); break;
-				case  4: _func(_args[0], _args[1], _args[2], _args[3]); break;
-				case  5: _func(_args[0], _args[1], _args[2], _args[3], _args[4]); break;
-				case  6: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5]); break;
-				case  7: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6]); break;
-				case  8: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7]); break;
-				case  9: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8]); break;
-				case 10: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9]); break;
-				case 11: _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10]); break;
-				default: __snowstate_trace("Whoa hello there!"); break;
-			}
-		}
+		if (_func != undefined) __func_exec(_func, _args);
 		
 		return self;
 	};
@@ -266,7 +250,13 @@ function SnowState(_initState, _execEnter = true) constructor {
 		enter = _enter;
 			
 		// Leave current state
-		__tempEvent = _defLeave; leave(_data);
+		if (leave == undefined) {
+			leave = _defLeave;
+			leave();	
+		} else {
+			__tempEvent = _defLeave;
+			leave(_data);
+		}
 				
 		// Add to history
 		if (array_length(__childQueue) > 0) {
@@ -279,7 +269,13 @@ function SnowState(_initState, _execEnter = true) constructor {
 		__history_add(_state);
 				
 		// Enter next state
-		__tempEvent = _defEnter; enter(_data);
+		if (enter == undefined) {
+			enter = _defEnter;
+			enter();	
+		} else {
+			__tempEvent = _defEnter;
+			enter(_data);
+		}
 				
 		// Reset temp variable
 		__tempEvent = undefined;
@@ -336,12 +332,40 @@ function SnowState(_initState, _execEnter = true) constructor {
 				
 		__currEvent = _event;
 		var _func = __states[$ _state][$ _event].func;
-		with (__owner) {
-			if (_args == undefined) _func();
-				else script_execute_ext(method_get_index(_func), _args);
-		}
+		var _pyramid = __func_exec;
+		with (__owner) _pyramid(_func, _args);
 			
 		return self;
+	};
+	
+	/// @param {function} function
+	/// @param {array<any>} [args=undefined]
+	/// @returns {any} Return value of function
+	__func_exec = function(_func, _args = undefined) {
+		if (_args == undefined) return _func();
+		
+		switch (array_length(_args)) {
+			case  0: return _func();
+			case  1: return _func(_args[0]);
+			case  2: return _func(_args[0], _args[1]);
+			case  3: return _func(_args[0], _args[1], _args[2]);
+			case  4: return _func(_args[0], _args[1], _args[2], _args[3]);
+			case  5: return _func(_args[0], _args[1], _args[2], _args[3], _args[4]);
+			case  6: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5]);
+			case  7: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6]);
+			case  8: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7]);
+			case  9: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8]);
+			case 10: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9]);
+			case 11: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10]);
+			case 12: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10], _args[11]);
+			case 13: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10], _args[11], _args[12]);
+			case 14: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10], _args[11], _args[12], _args[13]);
+			case 15: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10], _args[11], _args[12], _args[13], _args[14]);
+			case 16: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10], _args[11], _args[12], _args[13], _args[14], _args[15]);
+			default: __snowstate_error("Can't use more than 16 arguments."); break;
+		}
+		
+		return undefined;
 	};
 
 	/// @returns {string} The current state
@@ -591,17 +615,17 @@ function SnowState(_initState, _execEnter = true) constructor {
 	};
 
 	/// @param {string} state_name
-	/// @param {function} [leave_func]
-	/// @param {function} [enter_func]
+	/// @param {function} [leave_func=undefined]
+	/// @param {function} [enter_func=undefined]
 	/// @param {struct} [data=undefined]
 	/// @returns {SnowState} self
-	change = function(_state, _leave = leave, _enter = enter, _data = undefined) {
-		if (!__is_really_a_method(_leave)) {
+	change = function(_state, _leave = undefined, _enter = undefined, _data = undefined) {
+		if ((_leave != undefined) && !__is_really_a_method(_leave)) {
 			__snowstate_error("Invalid value for \"leave_func\" in change(). Should be a function.");
 			return undefined;
 		}
 		
-		if (!__is_really_a_method(_enter)) {
+		if ((_enter != undefined) && !__is_really_a_method(_enter)) {
 			__snowstate_error("Invalid value for \"enter_func\" in change(). Should be a function.");
 			return undefined;
 		}
@@ -1040,6 +1064,6 @@ if (!is_string(SNOWSTATE_REFLEXIVE_TRANSITION_NAME) || (string_length(SNOWSTATE_
 
 // Some info
 #macro SNOWSTATE_VERSION "v3.0.9999 (dev)"
-#macro SNOWSTATE_DATE "18-03-2022"
+#macro SNOWSTATE_DATE "21-03-2022"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");
