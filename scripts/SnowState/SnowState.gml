@@ -256,8 +256,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @param {string} state_name
 	/// @param {function} leave_func
 	/// @param {function} enter_func
+	/// @param {struct} [data]
 	/// @returns {SnowState} self
-	__change = method(self, function(_state, _leave, _enter) {
+	__change = method(self, function(_state, _leave, _enter, _data) {
 		var _defLeave, _defEnter;
 		_defLeave = leave;
 		_defEnter = enter;
@@ -265,7 +266,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 		enter = _enter;
 			
 		// Leave current state
-		__tempEvent = _defLeave; leave();
+		__tempEvent = _defLeave; leave(_data);
 				
 		// Add to history
 		if (array_length(__childQueue) > 0) {
@@ -278,7 +279,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 		__history_add(_state);
 				
 		// Enter next state
-		__tempEvent = _defEnter; enter();
+		__tempEvent = _defEnter; enter(_data);
 				
 		// Reset temp variable
 		__tempEvent = undefined;
@@ -453,8 +454,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 	});
 	
 	/// @param {string} transition_name
+	/// @param {struct} [data]
 	/// @returns {bool} Whether the transition has been triggered (true), or not (false)
-	__trigger = function(_transitionName) {
+	__trigger = function(_transitionName, _data) {
 		if (!__assert_transition_name_valid(_transitionName)) return false;
 			
 		var _currState, _source;
@@ -463,19 +465,19 @@ function SnowState(_initState, _execEnter = true) constructor {
 			
 		// My triggers
 		if (__transition_exists(_transitionName, _source) == SNOWSTATE_TRIGGER.DEFINED) {
-			if (__try_triggers(__transitions[$ _source][$ _transitionName], _currState, _transitionName)) return true;
+			if (__try_triggers(__transitions[$ _source][$ _transitionName], _currState, _transitionName, _data)) return true;
 		}
 				
 		// Wild triggers
 		if (__transition_exists(_transitionName, SNOWSTATE_WILDCARD_TRANSITION_NAME) == SNOWSTATE_TRIGGER.DEFINED) {
-			if (__try_triggers(__wildTransitions[$ _transitionName], _currState, _transitionName)) return true;
+			if (__try_triggers(__wildTransitions[$ _transitionName], _currState, _transitionName, _data)) return true;
 		}
 			
 		// Parent triggers
 		while (variable_struct_exists(__parent, _source)) {
 			_source = __parent[$ _source];
 			if (__transition_exists(_transitionName, _source) == SNOWSTATE_TRIGGER.DEFINED) {
-				if (__try_triggers(__transitions[$ _source][$ _transitionName], _currState, _transitionName)) return true;
+				if (__try_triggers(__transitions[$ _source][$ _transitionName], _currState, _transitionName, _data)) return true;
 			}
 		}
 			
@@ -485,8 +487,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @param {array} transitions
 	/// @param {string} source_state
 	/// @param {string} trigger_name
+	/// @param {struct} [data]
 	/// @returns {bool} Whether the trigger is successful (true), or not (false)
-	__try_triggers = method(self, function(_transitions, _source, _trigger) {
+	__try_triggers = method(self, function(_transitions, _source, _trigger, _data) {
 		var _transition, _dest, _i;
 		_i = 0; repeat(array_length(_transitions)) {
 			_transition = _transitions[_i]; ++_i;
@@ -496,8 +499,8 @@ function SnowState(_initState, _execEnter = true) constructor {
 			if (_dest == SNOWSTATE_REFLEXIVE_TRANSITION_NAME) _dest = _source;
 					
 			// Check condition
-			if (_transition.condition(_trigger, _source, _dest)) {
-				__change(_dest, _transition.leave, _transition.enter);
+			if (_transition.condition(_data)) {
+				__change(_dest, _transition.leave, _transition.enter, _data);
 				__broadcast_event("state changed", [_source, _dest, _trigger]);
 				return true;
 			}
@@ -590,8 +593,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @param {string} state_name
 	/// @param {function} [leave_func]
 	/// @param {function} [enter_func]
+	/// @param {struct} [data=undefined]
 	/// @returns {SnowState} self
-	change = function(_state, _leave = leave, _enter = enter) {
+	change = function(_state, _leave = leave, _enter = enter, _data = undefined) {
 		if (!__is_really_a_method(_leave)) {
 			__snowstate_error("Invalid value for \"leave_func\" in change(). Should be a function.");
 			return undefined;
@@ -603,7 +607,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 		}
 		
 		var _source = get_current_state();
-		__change(_state, _leave, _enter);
+		__change(_state, _leave, _enter, _data);
 		__broadcast_event("state changed", [_state, _source]);
 		
 		return self;
@@ -930,16 +934,17 @@ function SnowState(_initState, _execEnter = true) constructor {
 	};
 	
 	/// @param {string|array} transition_name
+	/// @param {struct} [data=undefined]
 	/// @returns {bool} Whether a transition has been triggered (true), or not (false)
-	trigger = function(_transition) {
+	trigger = function(_transition, _data = undefined) {
 		if (is_array(_transition)) {
 			var _i = 0; repeat (array_length(_transition)) {
-				if (__trigger(_transition[_i])) return true;
+				if (__trigger(_transition[_i], _data)) return true;
 				++_i;
 			}
 			return false;
 		} else {
-			return __trigger(_transition);
+			return __trigger(_transition, _data);
 		}
 	}
 
