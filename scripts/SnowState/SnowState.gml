@@ -690,6 +690,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 			__snowstate_error("Time should be a number");
 			return undefined;
 		}
+		
 		__stateStartTime = get_timer() - (_us ? _time : (_time * 1/game_get_speed(gamespeed_fps) * 1000000));
 		
 		return self;
