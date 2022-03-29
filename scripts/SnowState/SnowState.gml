@@ -1,5 +1,5 @@
 /**
-*	SnowState | v3.0.9999 (dev)
+*	SnowState | v3.1.0
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki
 *
 *	Author: Sohom Sahaun | @sohomsahaun
@@ -1063,7 +1063,7 @@ if (!is_string(SNOWSTATE_REFLEXIVE_TRANSITION_NAME) || (string_length(SNOWSTATE_
 }
 
 // Some info
-#macro SNOWSTATE_VERSION "v3.0.9999 (dev)"
-#macro SNOWSTATE_DATE "21-03-2022"
+#macro SNOWSTATE_VERSION "v3.1.0"
+#macro SNOWSTATE_DATE "29-03-2022"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");
