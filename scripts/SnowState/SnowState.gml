@@ -525,7 +525,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 			// Check condition
 			if (_transition.condition(_data)) {
 				__change(_dest, _transition.leave, _transition.enter, _data);
-				__broadcast_event("state changed", [_source, _dest, _trigger]);
+				__broadcast_event("state changed", [_dest, _source, _trigger]);
 				return true;
 			}
 		}
