@@ -228,24 +228,24 @@ fsm
 			grav = gravGround;	
 		}
 	})
-	.add_transition("run", "idle", "run")
-	.add_transition("jump", ["idle", "run"], "jump")
-	.add_transition("attack", ["idle", "run"], "groundAttack1", function() { return hasSword; })
-	.add_transition("attack", "fall", "airAttack1", function() { return (hasSword && canAirAttack); })
-	.add_transition("throw", ["idle", "run", "jump", "fall"], "throwSword", function() { return hasSword; })
-	.add_transition("coyote", "fall", "jump", function() {
+	.add_transition("t_run", "idle", "run")
+	.add_transition("t_jump", ["idle", "run"], "jump")
+	.add_transition("t_attack", ["idle", "run"], "groundAttack1", function() { return hasSword; })
+	.add_transition("t_attack", "fall", "airAttack1", function() { return (hasSword && canAirAttack); })
+	.add_transition("t_throw", ["idle", "run", "jump", "fall"], "throwSword", function() { return hasSword; })
+	.add_transition("t_coyote", "fall", "jump", function() {
 		return (input.jump && (fsm.get_previous_state() == "run") && (fsm.get_time(false) <= coyoteDuration));
 	})
-	.add_transition("transition", ["idle", "run"], "fall", function() { return !on_ground(); })
-	.add_transition("transition", "jump", "fall", function() { return (vspd >= 0); })
-	.add_transition("transition", "run", "idle", function() { return (input.hdir == 0); })
-	.add_transition("transition", ["fall", "airAttack"], "idle", function() { return on_ground(); })
-	.add_transition("transition", "groundAttack1", "groundAttack2", function() { return (nextAttack && animation_end()); })
-	.add_transition("transition", "groundAttack1", "idle", function() { return animation_end(); })
-	.add_transition("transition", "groundAttack2", "groundAttack3", function() { return (nextAttack && animation_end()); })
-	.add_transition("transition", ["groundAttack2", "groundAttack3"], "idle", function() { return animation_end(); })
-	.add_transition("transition", "airAttack1", "airAttack2", function() { return (nextAttack && animation_end()); })
-	.add_transition("transition", ["airAttack1", "airAttack2"], "fall", function() { return animation_end(); })
-	.add_transition("transition", "throwSword", "fall", function() { return ((fsm.get_previous_state() == "jump") && animation_end()); })
-	.add_transition("transition", "throwSword", "fall", function() { return ((fsm.get_previous_state() == "fall") && animation_end()); })
-	.add_transition("transition", "throwSword", "idle", function() { return animation_end(); });
+	.add_transition("t_transition", ["idle", "run"], "fall", function() { return !on_ground(); })
+	.add_transition("t_transition", "jump", "fall", function() { return (vspd >= 0); })
+	.add_transition("t_transition", "run", "idle", function() { return (input.hdir == 0); })
+	.add_transition("t_transition", ["fall", "airAttack"], "idle", function() { return on_ground(); })
+	.add_transition("t_transition", "groundAttack1", "groundAttack2", function() { return (nextAttack && animation_end()); })
+	.add_transition("t_transition", "groundAttack1", "idle", function() { return animation_end(); })
+	.add_transition("t_transition", "groundAttack2", "groundAttack3", function() { return (nextAttack && animation_end()); })
+	.add_transition("t_transition", ["groundAttack2", "groundAttack3"], "idle", function() { return animation_end(); })
+	.add_transition("t_transition", "airAttack1", "airAttack2", function() { return (nextAttack && animation_end()); })
+	.add_transition("t_transition", ["airAttack1", "airAttack2"], "fall", function() { return animation_end(); })
+	.add_transition("t_transition", "throwSword", "fall", function() { return ((fsm.get_previous_state() == "jump") && animation_end()); })
+	.add_transition("t_transition", "throwSword", "fall", function() { return ((fsm.get_previous_state() == "fall") && animation_end()); })
+	.add_transition("t_transition", "throwSword", "idle", function() { return animation_end(); });

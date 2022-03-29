@@ -71,7 +71,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sSwordEmbedded","path":"sprites/sSwordEmbedded/sSwordEmbedded.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sSwordEmbedded",
     "tags": [],
     "resourceType": "GMSequence",

@@ -59,7 +59,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sPlayerSwordFall","path":"sprites/sPlayerSwordFall/sPlayerSwordFall.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sPlayerSwordFall",
     "tags": [],
     "resourceType": "GMSequence",

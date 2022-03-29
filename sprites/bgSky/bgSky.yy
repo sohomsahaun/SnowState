@@ -59,7 +59,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"bgSky","path":"sprites/bgSky/bgSky.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "bgSky",
     "tags": [],
     "resourceType": "GMSequence",

@@ -71,7 +71,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sBackTreeRegular","path":"sprites/sBackTreeRegular/sBackTreeRegular.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sBackTreeRegular",
     "tags": [],
     "resourceType": "GMSequence",

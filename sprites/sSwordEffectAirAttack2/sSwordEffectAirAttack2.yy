@@ -63,7 +63,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sSwordEffectAirAttack2","path":"sprites/sSwordEffectAirAttack2/sSwordEffectAirAttack2.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sSwordEffectAirAttack2",
     "tags": [],
     "resourceType": "GMSequence",

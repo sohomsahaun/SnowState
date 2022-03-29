@@ -71,7 +71,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sBackTreeRight","path":"sprites/sBackTreeRight/sBackTreeRight.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sBackTreeRight",
     "tags": [],
     "resourceType": "GMSequence",

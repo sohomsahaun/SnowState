@@ -60,7 +60,7 @@
     "eventToFunction": {},
     "eventStubScript": null,
     "parent": {"name":"sSwordEmbeddedMask","path":"sprites/sSwordEmbeddedMask/sSwordEmbeddedMask.yy",},
-    "resourceVersion": "1.3",
+    "resourceVersion": "1.4",
     "name": "sSwordEmbeddedMask",
     "tags": [],
     "resourceType": "GMSequence",
