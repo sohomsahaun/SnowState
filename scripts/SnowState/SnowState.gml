@@ -1,5 +1,5 @@
 /**
-*	SnowState | v3.1.0
+*	SnowState | v3.1.1
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki
 *
 *	Author: Sohom Sahaun | @sohomsahaun
@@ -324,7 +324,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @param {string} [state_name]
 	/// @param {array} [args]
 	/// @returns {SnowState} self
-	__execute = function(_event, _state = __history[0], _args = undefined) {
+	__execute = function(_event, _state = undefined, _args = undefined) {
+		if (_state == undefined) _state = __history[0];
+		
 		if (!__is_state_defined(_state)) {
 			__snowstate_error("State \"", _state, "\" is not defined.");
 			return undefined;
@@ -1064,7 +1066,7 @@ if (!is_string(SNOWSTATE_REFLEXIVE_TRANSITION_NAME) || (string_length(SNOWSTATE_
 }
 
 // Some info
-#macro SNOWSTATE_VERSION "v3.1.0"
-#macro SNOWSTATE_DATE "29-03-2022"
+#macro SNOWSTATE_VERSION "v3.1.1"
+#macro SNOWSTATE_DATE "22-04-2022"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");
