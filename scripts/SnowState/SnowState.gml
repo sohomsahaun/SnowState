@@ -176,7 +176,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @returns {SnowState} self
 	__assert_event_name_valid = function(_event) {
 		if (variable_struct_exists(__defaultEvents, _event)) return true;
-		if (variable_struct_exists(other, _event)) {
+		if (variable_struct_exists(self, _event)) {
 			__snowstate_error("Can not use \"", _event, "\" as an event.");
 			return false;
 		}

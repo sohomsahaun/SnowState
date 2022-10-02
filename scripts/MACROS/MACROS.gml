@@ -1,4 +1,4 @@
-#macro DEMO "D"		// D = Changing States Directly
+#macro DEMO "T"		// D = Changing States Directly
 					// T = Changing States Using Triggered Transitions
 
 #macro CAM   view_camera[0]					// Main camera view
