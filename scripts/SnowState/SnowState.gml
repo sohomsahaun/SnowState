@@ -250,13 +250,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 		enter = _enter;
 			
 		// Leave current state
-		if (leave == undefined) {
-			leave = _defLeave;
-			leave();	
-		} else {
-			__tempEvent = _defLeave;
-			leave(_data);
-		}
+		if (leave == undefined) leave = _defLeave;
+			else __tempEvent = _defLeave;
+		leave(_data);
 				
 		// Add to history
 		if (array_length(__childQueue) > 0) {
@@ -269,13 +265,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 		__history_add(_state);
 				
 		// Enter next state
-		if (enter == undefined) {
-			enter = _defEnter;
-			enter();	
-		} else {
-			__tempEvent = _defEnter;
-			enter(_data);
-		}
+		if (enter == undefined) enter = _defEnter;
+			else __tempEvent = _defEnter;
+		enter(_data);
 				
 		// Reset temp variable
 		__tempEvent = undefined;
