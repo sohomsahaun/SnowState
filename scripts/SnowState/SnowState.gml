@@ -1059,6 +1059,6 @@ if (!is_string(SNOWSTATE_REFLEXIVE_TRANSITION_NAME) || (string_length(SNOWSTATE_
 
 // Some info
 #macro SNOWSTATE_VERSION "v3.1.2"
-#macro SNOWSTATE_DATE "02-10-2022"
+#macro SNOWSTATE_DATE "03-10-2022"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");
