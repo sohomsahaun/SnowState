@@ -1,5 +1,5 @@
 /**
-*	SnowState | v3.1.1
+*	SnowState | v3.1.2
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki
 *
 *	Author: Sohom Sahaun | @sohomsahaun
@@ -176,7 +176,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @returns {SnowState} self
 	__assert_event_name_valid = function(_event) {
 		if (variable_struct_exists(__defaultEvents, _event)) return true;
-		if (variable_struct_exists(other, _event)) {
+		if (variable_struct_exists(self, _event)) {
 			__snowstate_error("Can not use \"", _event, "\" as an event.");
 			return false;
 		}
@@ -250,13 +250,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 		enter = _enter;
 			
 		// Leave current state
-		if (leave == undefined) {
-			leave = _defLeave;
-			leave();	
-		} else {
-			__tempEvent = _defLeave;
-			leave(_data);
-		}
+		if (leave == undefined) leave = _defLeave;
+			else __tempEvent = _defLeave;
+		leave(_data);
 				
 		// Add to history
 		if (array_length(__childQueue) > 0) {
@@ -269,13 +265,9 @@ function SnowState(_initState, _execEnter = true) constructor {
 		__history_add(_state);
 				
 		// Enter next state
-		if (enter == undefined) {
-			enter = _defEnter;
-			enter();	
-		} else {
-			__tempEvent = _defEnter;
-			enter(_data);
-		}
+		if (enter == undefined) enter = _defEnter;
+			else __tempEvent = _defEnter;
+		enter(_data);
 				
 		// Reset temp variable
 		__tempEvent = undefined;
@@ -1066,7 +1058,7 @@ if (!is_string(SNOWSTATE_REFLEXIVE_TRANSITION_NAME) || (string_length(SNOWSTATE_
 }
 
 // Some info
-#macro SNOWSTATE_VERSION "v3.1.1"
-#macro SNOWSTATE_DATE "22-04-2022"
+#macro SNOWSTATE_VERSION "v3.1.2"
+#macro SNOWSTATE_DATE "03-10-2022"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");
