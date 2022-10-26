@@ -1,4 +1,7 @@
 {
+  "resourceType": "GMSprite",
+  "resourceVersion": "1.0",
+  "name": "sPlayerSwordRun",
   "bboxMode": 0,
   "collisionKind": 1,
   "type": 0,
@@ -14,6 +17,7 @@
   "HTile": false,
   "VTile": false,
   "For3D": false,
+  "DynamicTexturePage": false,
   "width": 39,
   "height": 30,
   "textureGroupId": {
@@ -24,27 +28,17 @@
   "gridX": 0,
   "gridY": 0,
   "frames": [
-    {"compositeImage":{"FrameId":{"name":"778e6509-09ba-471a-93bd-0e30d63e1419","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"778e6509-09ba-471a-93bd-0e30d63e1419","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":{"name":"075b9501-6b5d-4b42-9cd2-037a96614b1e","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordRun","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"778e6509-09ba-471a-93bd-0e30d63e1419","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"993c5d55-e1b8-4aef-8bfa-6d87084ce374","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"993c5d55-e1b8-4aef-8bfa-6d87084ce374","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":{"name":"075b9501-6b5d-4b42-9cd2-037a96614b1e","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordRun","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"993c5d55-e1b8-4aef-8bfa-6d87084ce374","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"2522d222-e2d4-4a9f-90c9-b81c6d5def68","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"2522d222-e2d4-4a9f-90c9-b81c6d5def68","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":{"name":"075b9501-6b5d-4b42-9cd2-037a96614b1e","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordRun","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"2522d222-e2d4-4a9f-90c9-b81c6d5def68","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"7d5b85ca-a44e-4011-90cc-88623eabbcad","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"7d5b85ca-a44e-4011-90cc-88623eabbcad","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":{"name":"075b9501-6b5d-4b42-9cd2-037a96614b1e","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordRun","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"7d5b85ca-a44e-4011-90cc-88623eabbcad","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"de0e5b9d-8e1f-487b-923d-2391f2b932e9","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"de0e5b9d-8e1f-487b-923d-2391f2b932e9","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":{"name":"075b9501-6b5d-4b42-9cd2-037a96614b1e","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordRun","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"de0e5b9d-8e1f-487b-923d-2391f2b932e9","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"d527277e-9111-4206-b517-13c03f57ac1d","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"d527277e-9111-4206-b517-13c03f57ac1d","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"LayerId":{"name":"075b9501-6b5d-4b42-9cd2-037a96614b1e","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordRun","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","name":"d527277e-9111-4206-b517-13c03f57ac1d","tags":[],"resourceType":"GMSpriteFrame",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"778e6509-09ba-471a-93bd-0e30d63e1419",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"993c5d55-e1b8-4aef-8bfa-6d87084ce374",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"2522d222-e2d4-4a9f-90c9-b81c6d5def68",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"7d5b85ca-a44e-4011-90cc-88623eabbcad",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"de0e5b9d-8e1f-487b-923d-2391f2b932e9",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"d527277e-9111-4206-b517-13c03f57ac1d",},
   ],
   "sequence": {
-    "spriteId": {"name":"sPlayerSwordRun","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},
+    "resourceType": "GMSequence",
+    "resourceVersion": "1.4",
+    "name": "sPlayerSwordRun",
     "timeUnits": 1,
     "playback": 1,
     "playbackSpeed": 10.0,
@@ -55,14 +49,14 @@
     "events": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MessageEventKeyframe>",},
     "moments": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MomentsEventKeyframe>",},
     "tracks": [
-      {"name":"frames","spriteId":null,"keyframes":{"Keyframes":[
+      {"resourceType":"GMSpriteFramesTrack","resourceVersion":"1.0","name":"frames","spriteId":null,"keyframes":{"Keyframes":[
             {"id":"9e912dfe-e3e0-4eef-9ef5-183b78ab367f","Key":0.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"778e6509-09ba-471a-93bd-0e30d63e1419","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"610747e2-5948-421a-a655-ff156eada78e","Key":1.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"993c5d55-e1b8-4aef-8bfa-6d87084ce374","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"d124e85c-6edd-4516-9209-e787f63cbbe8","Key":2.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"2522d222-e2d4-4a9f-90c9-b81c6d5def68","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"16881894-10d9-4899-bb21-4c81632d6b13","Key":3.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"7d5b85ca-a44e-4011-90cc-88623eabbcad","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"a92c0e6f-fc17-4aa8-8f57-55b5890c7a59","Key":4.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"de0e5b9d-8e1f-487b-923d-2391f2b932e9","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"79b4923d-fc30-433e-aa83-25af37e32d52","Key":5.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"d527277e-9111-4206-b517-13c03f57ac1d","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
-          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},"trackColour":0,"inheritsTrackColour":true,"builtinName":0,"traits":0,"interpolation":1,"tracks":[],"events":[],"isCreationTrack":false,"resourceVersion":"1.0","tags":[],"resourceType":"GMSpriteFramesTrack","modifiers":[],},
+          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},"trackColour":0,"inheritsTrackColour":true,"builtinName":0,"traits":0,"interpolation":1,"tracks":[],"events":[],"isCreationTrack":false,"modifiers":[],},
     ],
     "visibleRange": null,
     "lockOrigin": false,
@@ -78,22 +72,13 @@
     "yorigin": 30,
     "eventToFunction": {},
     "eventStubScript": null,
-    "parent": {"name":"sPlayerSwordRun","path":"sprites/sPlayerSwordRun/sPlayerSwordRun.yy",},
-    "resourceVersion": "1.4",
-    "name": "sPlayerSwordRun",
-    "tags": [],
-    "resourceType": "GMSequence",
   },
   "layers": [
-    {"visible":true,"isLocked":false,"blendMode":0,"opacity":100.0,"displayName":"default","resourceVersion":"1.0","name":"075b9501-6b5d-4b42-9cd2-037a96614b1e","tags":[],"resourceType":"GMImageLayer",},
+    {"resourceType":"GMImageLayer","resourceVersion":"1.0","name":"075b9501-6b5d-4b42-9cd2-037a96614b1e","visible":true,"isLocked":false,"blendMode":0,"opacity":100.0,"displayName":"default",},
   ],
   "nineSlice": null,
   "parent": {
     "name": "Player",
     "path": "folders/Sprites/Player.yy",
   },
-  "resourceVersion": "1.0",
-  "name": "sPlayerSwordRun",
-  "tags": [],
-  "resourceType": "GMSprite",
 }

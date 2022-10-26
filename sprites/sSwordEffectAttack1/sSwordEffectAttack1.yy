@@ -1,4 +1,7 @@
 {
+  "resourceType": "GMSprite",
+  "resourceVersion": "1.0",
+  "name": "sSwordEffectAttack1",
   "bboxMode": 0,
   "collisionKind": 1,
   "type": 0,
@@ -14,6 +17,7 @@
   "HTile": false,
   "VTile": false,
   "For3D": false,
+  "DynamicTexturePage": false,
   "width": 28,
   "height": 17,
   "textureGroupId": {
@@ -24,18 +28,14 @@
   "gridX": 0,
   "gridY": 0,
   "frames": [
-    {"compositeImage":{"FrameId":{"name":"92bbd7c0-ced3-4e18-8fcf-bca0f8da9b08","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"92bbd7c0-ced3-4e18-8fcf-bca0f8da9b08","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"LayerId":{"name":"51283ab3-f054-4ddf-9d72-9b19ad7209e4","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sSwordEffectAttack1","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"resourceVersion":"1.0","name":"92bbd7c0-ced3-4e18-8fcf-bca0f8da9b08","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"b0addc0e-b6c2-4b08-8353-c2203d6df19a","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"b0addc0e-b6c2-4b08-8353-c2203d6df19a","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"LayerId":{"name":"51283ab3-f054-4ddf-9d72-9b19ad7209e4","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sSwordEffectAttack1","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"resourceVersion":"1.0","name":"b0addc0e-b6c2-4b08-8353-c2203d6df19a","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"1ebc5b74-9b78-4856-bef3-711bef9e5a71","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"1ebc5b74-9b78-4856-bef3-711bef9e5a71","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"LayerId":{"name":"51283ab3-f054-4ddf-9d72-9b19ad7209e4","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sSwordEffectAttack1","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"resourceVersion":"1.0","name":"1ebc5b74-9b78-4856-bef3-711bef9e5a71","tags":[],"resourceType":"GMSpriteFrame",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"92bbd7c0-ced3-4e18-8fcf-bca0f8da9b08",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"b0addc0e-b6c2-4b08-8353-c2203d6df19a",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"1ebc5b74-9b78-4856-bef3-711bef9e5a71",},
   ],
   "sequence": {
-    "spriteId": {"name":"sSwordEffectAttack1","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},
+    "resourceType": "GMSequence",
+    "resourceVersion": "1.4",
+    "name": "sSwordEffectAttack1",
     "timeUnits": 1,
     "playback": 1,
     "playbackSpeed": 10.0,
@@ -46,11 +46,11 @@
     "events": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MessageEventKeyframe>",},
     "moments": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MomentsEventKeyframe>",},
     "tracks": [
-      {"name":"frames","spriteId":null,"keyframes":{"Keyframes":[
+      {"resourceType":"GMSpriteFramesTrack","resourceVersion":"1.0","name":"frames","spriteId":null,"keyframes":{"Keyframes":[
             {"id":"36971b26-3f34-4d8f-92bd-cbd57bc82031","Key":0.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"92bbd7c0-ced3-4e18-8fcf-bca0f8da9b08","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"d6344cf8-8feb-4bd2-9850-3bc9b111e102","Key":1.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"b0addc0e-b6c2-4b08-8353-c2203d6df19a","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"9834f818-8e6b-487b-88d2-696816958b10","Key":2.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"1ebc5b74-9b78-4856-bef3-711bef9e5a71","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
-          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},"trackColour":0,"inheritsTrackColour":true,"builtinName":0,"traits":0,"interpolation":1,"tracks":[],"events":[],"isCreationTrack":false,"resourceVersion":"1.0","tags":[],"resourceType":"GMSpriteFramesTrack","modifiers":[],},
+          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},"trackColour":0,"inheritsTrackColour":true,"builtinName":0,"traits":0,"interpolation":1,"tracks":[],"events":[],"isCreationTrack":false,"modifiers":[],},
     ],
     "visibleRange": null,
     "lockOrigin": false,
@@ -66,22 +66,13 @@
     "yorigin": 17,
     "eventToFunction": {},
     "eventStubScript": null,
-    "parent": {"name":"sSwordEffectAttack1","path":"sprites/sSwordEffectAttack1/sSwordEffectAttack1.yy",},
-    "resourceVersion": "1.4",
-    "name": "sSwordEffectAttack1",
-    "tags": [],
-    "resourceType": "GMSequence",
   },
   "layers": [
-    {"visible":true,"isLocked":false,"blendMode":0,"opacity":100.0,"displayName":"default","resourceVersion":"1.0","name":"51283ab3-f054-4ddf-9d72-9b19ad7209e4","tags":[],"resourceType":"GMImageLayer",},
+    {"resourceType":"GMImageLayer","resourceVersion":"1.0","name":"51283ab3-f054-4ddf-9d72-9b19ad7209e4","visible":true,"isLocked":false,"blendMode":0,"opacity":100.0,"displayName":"default",},
   ],
   "nineSlice": null,
   "parent": {
     "name": "Effects",
     "path": "folders/Sprites/Sword/Effects.yy",
   },
-  "resourceVersion": "1.0",
-  "name": "sSwordEffectAttack1",
-  "tags": [],
-  "resourceType": "GMSprite",
 }

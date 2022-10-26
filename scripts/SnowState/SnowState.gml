@@ -1,5 +1,5 @@
 /**
-*	SnowState | v3.1.2
+*	SnowState | v3.1.4
 *	Documentation: https://github.com/sohomsahaun/SnowState/wiki
 *
 *	Author: Sohom Sahaun | @sohomsahaun
@@ -65,10 +65,10 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @returns {SnowState} self
 	__add = function(_name, _struct, _hasParent) {
 		var _events, _state, _event, _i;
-			
+		
 		_state = __create_events_struct(_struct);
 		__states[$ _name] = _state;
-				
+		
 		// Update from parent
 		if (_hasParent) {
 			// Get events from parent
@@ -96,7 +96,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 				enter();
 			}
 		}
-				
+		
 		return self;
 	};
 		
@@ -337,6 +337,7 @@ function SnowState(_initState, _execEnter = true) constructor {
 	/// @returns {any} Return value of function
 	__func_exec = function(_func, _args = undefined) {
 		if (_args == undefined) return _func();
+		if (!is_array(_args)) return _func(_args);
 		
 		switch (array_length(_args)) {
 			case  0: return _func();
@@ -852,14 +853,14 @@ function SnowState(_initState, _execEnter = true) constructor {
 	};
 
 	/// @returns {SnowState} self
-	enter = function() {
-		__execute("enter");
+	enter = function(_data = undefined) {
+		__execute("enter", undefined, _data);
 		return self;
 	};
 	
 	/// @returns {SnowState} self
-	leave = function() {
-		__execute("leave");
+	leave = function(_data = undefined) {
+		__execute("leave", undefined, _data);
 		return self;
 	};
 	
@@ -1058,7 +1059,7 @@ if (!is_string(SNOWSTATE_REFLEXIVE_TRANSITION_NAME) || (string_length(SNOWSTATE_
 }
 
 // Some info
-#macro SNOWSTATE_VERSION "v3.1.2"
-#macro SNOWSTATE_DATE "03-10-2022"
+#macro SNOWSTATE_VERSION "v3.1.4"
+#macro SNOWSTATE_DATE "26-10-2022"
 
 show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");

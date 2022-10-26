@@ -1,4 +1,7 @@
 {
+  "resourceType": "GMSprite",
+  "resourceVersion": "1.0",
+  "name": "sPlayerSwordThrowSword",
   "bboxMode": 0,
   "collisionKind": 1,
   "type": 0,
@@ -14,6 +17,7 @@
   "HTile": false,
   "VTile": false,
   "For3D": false,
+  "DynamicTexturePage": false,
   "width": 26,
   "height": 31,
   "textureGroupId": {
@@ -24,18 +28,14 @@
   "gridX": 0,
   "gridY": 0,
   "frames": [
-    {"compositeImage":{"FrameId":{"name":"0e841b6c-c2ca-429a-8d44-fa3a17d3d1f1","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"0e841b6c-c2ca-429a-8d44-fa3a17d3d1f1","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"LayerId":{"name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordThrowSword","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"resourceVersion":"1.0","name":"0e841b6c-c2ca-429a-8d44-fa3a17d3d1f1","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"ebb6a26d-6c70-4653-862d-a23e4b47933b","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"ebb6a26d-6c70-4653-862d-a23e4b47933b","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"LayerId":{"name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordThrowSword","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"resourceVersion":"1.0","name":"ebb6a26d-6c70-4653-862d-a23e4b47933b","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"c250ad7f-31c4-4eda-8a18-7c2e4819b0e8","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"c250ad7f-31c4-4eda-8a18-7c2e4819b0e8","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"LayerId":{"name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordThrowSword","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"resourceVersion":"1.0","name":"c250ad7f-31c4-4eda-8a18-7c2e4819b0e8","tags":[],"resourceType":"GMSpriteFrame",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"0e841b6c-c2ca-429a-8d44-fa3a17d3d1f1",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"ebb6a26d-6c70-4653-862d-a23e4b47933b",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"c250ad7f-31c4-4eda-8a18-7c2e4819b0e8",},
   ],
   "sequence": {
-    "spriteId": {"name":"sPlayerSwordThrowSword","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},
+    "resourceType": "GMSequence",
+    "resourceVersion": "1.4",
+    "name": "sPlayerSwordThrowSword",
     "timeUnits": 1,
     "playback": 1,
     "playbackSpeed": 10.0,
@@ -50,11 +50,11 @@
       ],"resourceVersion":"1.0","resourceType":"KeyframeStore<MessageEventKeyframe>",},
     "moments": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MomentsEventKeyframe>",},
     "tracks": [
-      {"name":"frames","spriteId":null,"keyframes":{"Keyframes":[
+      {"resourceType":"GMSpriteFramesTrack","resourceVersion":"1.0","name":"frames","spriteId":null,"keyframes":{"Keyframes":[
             {"id":"b8004c99-b42f-49b9-ab13-493c54b31068","Key":0.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"0e841b6c-c2ca-429a-8d44-fa3a17d3d1f1","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"7d6e0715-2993-4f17-8ac1-80c0f1174dcb","Key":1.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"ebb6a26d-6c70-4653-862d-a23e4b47933b","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"1282db26-e9b1-456d-a38a-caf0b3e0673f","Key":2.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"c250ad7f-31c4-4eda-8a18-7c2e4819b0e8","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
-          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},"trackColour":0,"inheritsTrackColour":true,"builtinName":0,"traits":0,"interpolation":1,"tracks":[],"events":[],"isCreationTrack":false,"resourceVersion":"1.0","tags":[],"resourceType":"GMSpriteFramesTrack","modifiers":[],},
+          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},"trackColour":0,"inheritsTrackColour":true,"builtinName":0,"traits":0,"interpolation":1,"tracks":[],"events":[],"isCreationTrack":false,"modifiers":[],},
     ],
     "visibleRange": null,
     "lockOrigin": false,
@@ -70,22 +70,13 @@
     "yorigin": 31,
     "eventToFunction": {},
     "eventStubScript": null,
-    "parent": {"name":"sPlayerSwordThrowSword","path":"sprites/sPlayerSwordThrowSword/sPlayerSwordThrowSword.yy",},
-    "resourceVersion": "1.4",
-    "name": "sPlayerSwordThrowSword",
-    "tags": [],
-    "resourceType": "GMSequence",
   },
   "layers": [
-    {"visible":true,"isLocked":false,"blendMode":0,"opacity":100.0,"displayName":"default","resourceVersion":"1.0","name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","tags":[],"resourceType":"GMImageLayer",},
+    {"resourceType":"GMImageLayer","resourceVersion":"1.0","name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","visible":true,"isLocked":false,"blendMode":0,"opacity":100.0,"displayName":"default",},
   ],
   "nineSlice": null,
   "parent": {
     "name": "Player",
     "path": "folders/Sprites/Player.yy",
   },
-  "resourceVersion": "1.0",
-  "name": "sPlayerSwordThrowSword",
-  "tags": [],
-  "resourceType": "GMSprite",
 }

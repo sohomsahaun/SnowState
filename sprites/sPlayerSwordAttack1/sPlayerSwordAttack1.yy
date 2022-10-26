@@ -1,4 +1,7 @@
 {
+  "resourceType": "GMSprite",
+  "resourceVersion": "1.0",
+  "name": "sPlayerSwordAttack1",
   "bboxMode": 0,
   "collisionKind": 1,
   "type": 0,
@@ -14,6 +17,7 @@
   "HTile": false,
   "VTile": false,
   "For3D": false,
+  "DynamicTexturePage": false,
   "width": 44,
   "height": 29,
   "textureGroupId": {
@@ -24,18 +28,14 @@
   "gridX": 0,
   "gridY": 0,
   "frames": [
-    {"compositeImage":{"FrameId":{"name":"98cc2c82-cbd1-43eb-addd-ce5c9c3753ca","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"98cc2c82-cbd1-43eb-addd-ce5c9c3753ca","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"LayerId":{"name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordAttack1","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"resourceVersion":"1.0","name":"98cc2c82-cbd1-43eb-addd-ce5c9c3753ca","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"6de477b7-c3b4-4930-8943-412fef79f39f","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"6de477b7-c3b4-4930-8943-412fef79f39f","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"LayerId":{"name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordAttack1","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"resourceVersion":"1.0","name":"6de477b7-c3b4-4930-8943-412fef79f39f","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"d9fe2a35-5358-48f9-a7ca-f62d70a45316","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"d9fe2a35-5358-48f9-a7ca-f62d70a45316","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"LayerId":{"name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordAttack1","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"resourceVersion":"1.0","name":"d9fe2a35-5358-48f9-a7ca-f62d70a45316","tags":[],"resourceType":"GMSpriteFrame",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"98cc2c82-cbd1-43eb-addd-ce5c9c3753ca",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"6de477b7-c3b4-4930-8943-412fef79f39f",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"d9fe2a35-5358-48f9-a7ca-f62d70a45316",},
   ],
   "sequence": {
-    "spriteId": {"name":"sPlayerSwordAttack1","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},
+    "resourceType": "GMSequence",
+    "resourceVersion": "1.4",
+    "name": "sPlayerSwordAttack1",
     "timeUnits": 1,
     "playback": 1,
     "playbackSpeed": 10.0,
@@ -46,11 +46,11 @@
     "events": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MessageEventKeyframe>",},
     "moments": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MomentsEventKeyframe>",},
     "tracks": [
-      {"name":"frames","spriteId":null,"keyframes":{"Keyframes":[
+      {"resourceType":"GMSpriteFramesTrack","resourceVersion":"1.0","name":"frames","spriteId":null,"keyframes":{"Keyframes":[
             {"id":"fdbefd02-25cd-458f-9c80-43d5b2a8e295","Key":0.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"98cc2c82-cbd1-43eb-addd-ce5c9c3753ca","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"f4b3e7f7-d136-4833-b442-c94977596e3c","Key":1.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"6de477b7-c3b4-4930-8943-412fef79f39f","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"2048068a-fb8c-4247-a143-aeabe853b371","Key":2.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"d9fe2a35-5358-48f9-a7ca-f62d70a45316","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
-          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},"trackColour":0,"inheritsTrackColour":true,"builtinName":0,"traits":0,"interpolation":1,"tracks":[],"events":[],"isCreationTrack":false,"resourceVersion":"1.0","tags":[],"resourceType":"GMSpriteFramesTrack","modifiers":[],},
+          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},"trackColour":0,"inheritsTrackColour":true,"builtinName":0,"traits":0,"interpolation":1,"tracks":[],"events":[],"isCreationTrack":false,"modifiers":[],},
     ],
     "visibleRange": null,
     "lockOrigin": false,
@@ -66,22 +66,13 @@
     "yorigin": 29,
     "eventToFunction": {},
     "eventStubScript": null,
-    "parent": {"name":"sPlayerSwordAttack1","path":"sprites/sPlayerSwordAttack1/sPlayerSwordAttack1.yy",},
-    "resourceVersion": "1.4",
-    "name": "sPlayerSwordAttack1",
-    "tags": [],
-    "resourceType": "GMSequence",
   },
   "layers": [
-    {"visible":true,"isLocked":false,"blendMode":0,"opacity":100.0,"displayName":"default","resourceVersion":"1.0","name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","tags":[],"resourceType":"GMImageLayer",},
+    {"resourceType":"GMImageLayer","resourceVersion":"1.0","name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","visible":true,"isLocked":false,"blendMode":0,"opacity":100.0,"displayName":"default",},
   ],
   "nineSlice": null,
   "parent": {
     "name": "Player",
     "path": "folders/Sprites/Player.yy",
   },
-  "resourceVersion": "1.0",
-  "name": "sPlayerSwordAttack1",
-  "tags": [],
-  "resourceType": "GMSprite",
 }

@@ -1,4 +1,7 @@
 {
+  "resourceType": "GMSprite",
+  "resourceVersion": "1.0",
+  "name": "sPlayerSwordAirAttack1",
   "bboxMode": 0,
   "collisionKind": 1,
   "type": 0,
@@ -14,6 +17,7 @@
   "HTile": false,
   "VTile": false,
   "For3D": false,
+  "DynamicTexturePage": false,
   "width": 32,
   "height": 35,
   "textureGroupId": {
@@ -24,18 +28,14 @@
   "gridX": 0,
   "gridY": 0,
   "frames": [
-    {"compositeImage":{"FrameId":{"name":"fc789121-5d78-41bd-97c8-ae437318d44e","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"fc789121-5d78-41bd-97c8-ae437318d44e","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"LayerId":{"name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordAirAttack1","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"resourceVersion":"1.0","name":"fc789121-5d78-41bd-97c8-ae437318d44e","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"60eadbb6-4a62-470a-900b-1b1628988c9e","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"60eadbb6-4a62-470a-900b-1b1628988c9e","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"LayerId":{"name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordAirAttack1","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"resourceVersion":"1.0","name":"60eadbb6-4a62-470a-900b-1b1628988c9e","tags":[],"resourceType":"GMSpriteFrame",},
-    {"compositeImage":{"FrameId":{"name":"f3aba6b0-4f6a-4338-9e7c-85d42c92a067","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"LayerId":null,"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},"images":[
-        {"FrameId":{"name":"f3aba6b0-4f6a-4338-9e7c-85d42c92a067","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"LayerId":{"name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"resourceVersion":"1.0","name":"","tags":[],"resourceType":"GMSpriteBitmap",},
-      ],"parent":{"name":"sPlayerSwordAirAttack1","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"resourceVersion":"1.0","name":"f3aba6b0-4f6a-4338-9e7c-85d42c92a067","tags":[],"resourceType":"GMSpriteFrame",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"fc789121-5d78-41bd-97c8-ae437318d44e",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"60eadbb6-4a62-470a-900b-1b1628988c9e",},
+    {"resourceType":"GMSpriteFrame","resourceVersion":"1.1","name":"f3aba6b0-4f6a-4338-9e7c-85d42c92a067",},
   ],
   "sequence": {
-    "spriteId": {"name":"sPlayerSwordAirAttack1","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},
+    "resourceType": "GMSequence",
+    "resourceVersion": "1.4",
+    "name": "sPlayerSwordAirAttack1",
     "timeUnits": 1,
     "playback": 1,
     "playbackSpeed": 10.0,
@@ -46,11 +46,11 @@
     "events": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MessageEventKeyframe>",},
     "moments": {"Keyframes":[],"resourceVersion":"1.0","resourceType":"KeyframeStore<MomentsEventKeyframe>",},
     "tracks": [
-      {"name":"frames","spriteId":null,"keyframes":{"Keyframes":[
+      {"resourceType":"GMSpriteFramesTrack","resourceVersion":"1.0","name":"frames","spriteId":null,"keyframes":{"Keyframes":[
             {"id":"ab87590b-55d3-4f75-88a2-365ed23253df","Key":0.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"fc789121-5d78-41bd-97c8-ae437318d44e","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"de4f400c-561d-4bad-a93e-385e81676d90","Key":1.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"60eadbb6-4a62-470a-900b-1b1628988c9e","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
             {"id":"be3059eb-e92f-4e17-9c2c-dd9c6c4bbbe3","Key":2.0,"Length":1.0,"Stretch":false,"Disabled":false,"IsCreationKey":false,"Channels":{"0":{"Id":{"name":"f3aba6b0-4f6a-4338-9e7c-85d42c92a067","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},"resourceVersion":"1.0","resourceType":"SpriteFrameKeyframe",},},"resourceVersion":"1.0","resourceType":"Keyframe<SpriteFrameKeyframe>",},
-          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},"trackColour":0,"inheritsTrackColour":true,"builtinName":0,"traits":0,"interpolation":1,"tracks":[],"events":[],"isCreationTrack":false,"resourceVersion":"1.0","tags":[],"resourceType":"GMSpriteFramesTrack","modifiers":[],},
+          ],"resourceVersion":"1.0","resourceType":"KeyframeStore<SpriteFrameKeyframe>",},"trackColour":0,"inheritsTrackColour":true,"builtinName":0,"traits":0,"interpolation":1,"tracks":[],"events":[],"isCreationTrack":false,"modifiers":[],},
     ],
     "visibleRange": null,
     "lockOrigin": false,
@@ -66,22 +66,13 @@
     "yorigin": 27,
     "eventToFunction": {},
     "eventStubScript": null,
-    "parent": {"name":"sPlayerSwordAirAttack1","path":"sprites/sPlayerSwordAirAttack1/sPlayerSwordAirAttack1.yy",},
-    "resourceVersion": "1.4",
-    "name": "sPlayerSwordAirAttack1",
-    "tags": [],
-    "resourceType": "GMSequence",
   },
   "layers": [
-    {"visible":true,"isLocked":false,"blendMode":0,"opacity":100.0,"displayName":"default","resourceVersion":"1.0","name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","tags":[],"resourceType":"GMImageLayer",},
+    {"resourceType":"GMImageLayer","resourceVersion":"1.0","name":"a1179343-2345-49e2-9f85-2ae9668d7fdb","visible":true,"isLocked":false,"blendMode":0,"opacity":100.0,"displayName":"default",},
   ],
   "nineSlice": null,
   "parent": {
     "name": "Player",
     "path": "folders/Sprites/Player.yy",
   },
-  "resourceVersion": "1.0",
-  "name": "sPlayerSwordAirAttack1",
-  "tags": [],
-  "resourceType": "GMSprite",
 }
