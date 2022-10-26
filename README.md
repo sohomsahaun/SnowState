@@ -1,4 +1,4 @@
-<h1 align="center">SnowState 3.1.2</h1>
+<h1 align="center">SnowState 3.1.4</h1>
 <p align="center">@sohomsahaun</p>
 
 ---
@@ -20,4 +20,4 @@ You can find downloadable .yyz (project file with demo) and .yymps (SnowState on
 To know more about SnowState, please visit the [Wiki](https://github.com/sohomsahaun/SnowState/wiki)!
 
 ## Note
-This version of SnowState is for GameMaker Studio 2022.2.1 or higher. If you are using earlier version(s) of GameMaker Studio, please check out earlier version(s) of SnowState.
+This version of SnowState is for GameMaker Studio 2022.9.1 or higher. If you are using earlier version(s) of GameMaker Studio, please check out earlier version(s) of SnowState.
