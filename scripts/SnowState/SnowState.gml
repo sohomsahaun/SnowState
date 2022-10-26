@@ -852,12 +852,14 @@ function SnowState(_initState, _execEnter = true) constructor {
 		return __states[$ _state][$ _event].exists;
 	};
 
+	/// @param {struct} [data]
 	/// @returns {SnowState} self
 	enter = function(_data = undefined) {
 		__execute("enter", undefined, _data);
 		return self;
 	};
 	
+	/// @param {struct} [data]
 	/// @returns {SnowState} self
 	leave = function(_data = undefined) {
 		__execute("leave", undefined, _data);
