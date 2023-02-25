@@ -71,7 +71,7 @@ fsm
 		step: function() {
 			recall_sword();
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 		}
 	})
 	.add("run", {
@@ -83,7 +83,7 @@ fsm
 			set_movement();
 			recall_sword();
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 		}
 	})
 	.add("jump", {
@@ -103,7 +103,7 @@ fsm
 			
 			recall_sword();
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 		}
 	})
 	.add("fall", {
@@ -128,7 +128,7 @@ fsm
 			set_movement();
 			recall_sword();
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 		}
 	})
 	.add("attack", {
@@ -184,7 +184,7 @@ fsm
 			
 			// Go down, slowly
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 		},
 		leave: function() {
 			grav = gravGround;	
@@ -196,7 +196,7 @@ fsm
 		step: function() {
 			// Go down, slowly
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 		}
 	})
 	.add("throwSword", {
@@ -214,7 +214,7 @@ fsm
 		step: function() {
 			// Movement
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 		},
 		throwSword: function() {
 			if (event_data[? "event_type"] == "sprite event") {

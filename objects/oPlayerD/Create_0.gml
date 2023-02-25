@@ -100,7 +100,7 @@ fsm
 			
 			// Movement
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 			
 			// Check if I'm flating
 			if (!on_ground()) {
@@ -151,7 +151,7 @@ fsm
 			
 			// Movement
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 			
 			// Check if I'm flating
 			if (!on_ground()) {
@@ -186,7 +186,7 @@ fsm
 			
 			// Movement
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 			
 			// Check when we should start falling
 			if (vspd >= 0) {
@@ -246,7 +246,7 @@ fsm
 			
 			// Movement
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 			
 			// Check when we land
 			if (on_ground()) {
@@ -336,7 +336,7 @@ fsm
 			
 			// Go down, slowly
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 			
 			// Check when we land
 			if (on_ground()) {
@@ -368,7 +368,7 @@ fsm
 		step: function() {
 			// Go down, slowly
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 			
 			// When the animation ends, go to fall state again
 			if (animation_end()) {
@@ -402,7 +402,7 @@ fsm
 			
 			// Movement
 			apply_gravity();
-			move_and_collide();
+			collide_and_move();
 		},
 		throwSword: function() {
 			if (event_data[? "event_type"] == "sprite event") {

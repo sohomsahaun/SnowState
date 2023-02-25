@@ -50,7 +50,7 @@ set_movement = function() {
 	if (_dir != 0) face = _dir;
 };
 
-move_and_collide = function() {
+collide_and_move = function() {
 	if (place_meeting(x+hspd, y, oWall)) {
 		while (!place_meeting(x+sign(hspd), y, oWall)) x += sign(hspd);
 		hspd = 0;
