@@ -19,5 +19,12 @@ You can find downloadable .yyz (project file with demo) and .yymps (SnowState on
 ## Documentation
 To know more about SnowState, please visit the [Wiki](https://github.com/sohomsahaun/SnowState/wiki)!
 
+## Awards
+SnowState has been awarded as a winner of the [Helpful Dev Jam](https://gamemaker.io/en/blog/helpful-dev-jam-winners).
+
+It was also nominated as a finalist of the [GameMaker Awards 2024](https://gamemaker.io/en/blog/gamemaker-awards-2024-winners) for the 'Best Tool' category.
+
+![SnowState-BestTool](https://github.com/user-attachments/assets/bc6149f7-d03a-4861-a4c5-2aa02cbf9547)
+
 ## Note
 This version of SnowState is for GameMaker Studio 2022.9.1 or higher. If you are using earlier version(s) of GameMaker Studio, please check out earlier version(s) of SnowState.
