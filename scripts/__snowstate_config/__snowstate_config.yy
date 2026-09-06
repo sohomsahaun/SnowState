@@ -1,12 +1,13 @@
 {
-  "isDnD": false,
-  "isCompatibility": false,
-  "parent": {
-    "name": "SnowState",
-    "path": "folders/SnowState.yy",
+  "$GMScript":"v1",
+  "%Name":"__SnowState_Config",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"__SnowState_Config",
+  "parent":{
+    "name":"SnowState",
+    "path":"folders/SnowState.yy",
   },
-  "resourceVersion": "1.0",
-  "name": "__snowstate_config",
-  "tags": [],
-  "resourceType": "GMScript",
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
 }

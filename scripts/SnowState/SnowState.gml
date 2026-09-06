@@ -1,1067 +1,1584 @@
-/**
-*	SnowState | v3.1.4
-*	Documentation: https://github.com/sohomsahaun/SnowState/wiki
-*
-*	Author: Sohom Sahaun | @sohomsahaun
-*/
+/// @desc A finite state machine
+/// @param {String} _initial_state Initial state name
+/// @param {Bool} [_exec_initial_enter] Whether to fire the initial enter
+/// @returns {Struct.SnowState}
+function SnowState(_initial_state, _exec_initial_enter = true) constructor {
+	#region Constants
 
-/// @func SnowState(initial_state, [execute_enter])
-/// @param {string} initial_state		Initial state for the state machine
-/// @param {bool}   [execute_enter]		Whether to execute the "enter" event for the initial state (true) or not (false) [Default: true]
-function SnowState(_initState, _execEnter = true) constructor {
-	
-	#region SnowState System
-	
-	enum SNOWSTATE_EVENT {
-		NOT_DEFINED	= 0,
-		DEFINED		= 1,
-		INHERITED	= 2,
-		DEFAULT		= 4,
-	}
-	
-	enum SNOWSTATE_TRIGGER {
-		NOT_DEFINED	= 0,
-		DEFINED		= 1,
-		INHERITED	= 2,
-	}
-	
-	var _owner = other;
-	__owner				= _owner;		// Context of the SnowState instances
-	__states			= {};			// Struct holding states
-	__transitions		= {};			// Struct holding transitions
-	__wildTransitions	= {};			// Struct holding wildcard transitions
-	__on_events			= {};			// Struct holding events for .on()
-	__initState			= _initState;	// Initial state of the SnowState instance
-	__execEnter			= _execEnter;	// If the "enter" event should be executed by default or not
-	__currEvent			= undefined;	// Current event
-	__tempEvent			= undefined;	// Temporary event - Used when changing states
-	__parent			= {};			// Inheritance tree
-	__childQueue		= [];			// Path from current state to it's ancestor(s)
-	__stateStartTime	= get_timer();	// Start time of the current state (in microseconds)
-	__history			= array_create(2, undefined);	// Array holding the history
-	__historyMaxSize	= max(0, SNOWSTATE_DEFAULT_HISTORY_MAX_SIZE);	// Maximum size of history
-	__historyEnabled	= SNOWSTATE_HISTORY_ENABLED;	// If history is enabled or not
-	__defaultEvents		= {		// Default functions for events
-		enter: {
-			exists: SNOWSTATE_EVENT.NOT_DEFINED,
-			func: function() {}
-		},
-		leave: {
-			exists: SNOWSTATE_EVENT.NOT_DEFINED,
-			func: function() {}
-		},
-	};
-	__invalidStateNames = [	// It is what it is
-		SNOWSTATE_WILDCARD_TRANSITION_NAME,
-		SNOWSTATE_REFLEXIVE_TRANSITION_NAME,
-	];
-	
-	// Add .on() events
-	__on_events[$ "state changed"] = undefined;
-		
-	/// @param {string} state_name
-	/// @param {struct} state_struct
-	/// @param {bool} has_parent
-	/// @returns {SnowState} self
-	__add = function(_name, _struct, _hasParent) {
-		var _events, _state, _event, _i;
-		
-		_state = __create_events_struct(_struct);
-		__states[$ _name] = _state;
-		
-		// Update from parent
-		if (_hasParent) {
-			// Get events from parent
-			__update_events_from_parent(_name);
+	static EV_STATE_CHANGE = variable_get_hash("state_change");
 
-			// Replace parent's events with defined ones
-			_events = variable_struct_get_names(_struct);
-			_i = 0; repeat (array_length(_events)) {
-				_event = _events[_i];
-				_state[$ _event] = {
-					exists: SNOWSTATE_EVENT.DEFINED,
-					func: method(__owner, _struct[$ _event])
-				};
-				++_i;
-			}
+	static CHANGE_KIND_CHANGE = "change";
+	static CHANGE_KIND_PUSH = "push";
+	static CHANGE_KIND_POP = "pop";
+
+	static ENTER_HASH = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? SNOWSTATE_EVENT_ENTER : string(SNOWSTATE_EVENT_ENTER));
+	static STEP_HASH = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? SNOWSTATE_EVENT_STEP : string(SNOWSTATE_EVENT_STEP));
+	static EXIT_HASH = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? SNOWSTATE_EVENT_EXIT : string(SNOWSTATE_EVENT_EXIT));
+	static SUSPEND_HASH = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? SNOWSTATE_EVENT_SUSPEND : string(SNOWSTATE_EVENT_SUSPEND));
+	static RESUME_HASH = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? SNOWSTATE_EVENT_RESUME : string(SNOWSTATE_EVENT_RESUME));
+
+	#endregion
+
+	#region Setup
+
+	if (SNOWSTATE_VERIFY_USER_ARGS) {
+		self.__assert_name(_initial_state, "SnowState", "_initial_state");
+		self.__assert_bool(_exec_initial_enter, "SnowState", "_exec_initial_enter");
+		_exec_initial_enter = bool(_exec_initial_enter);
+	}
+
+	self.initial_state_name = _initial_state;
+	self.initial_state_name_hash = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _initial_state : string(_initial_state));
+	self.current_state_name = _initial_state;
+	self.exec_initial_enter = _exec_initial_enter;
+	self.initial_enter_done = false;
+
+	self.previous_state_name = undefined;
+	self.current_state_name_hash = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? self.current_state_name : string(self.current_state_name));
+	self.state_timer_in_steps = 0;
+	self.state_version = 0;
+
+	self.suspended_stack_frames = undefined;
+	self.active_stack_frame_depth = 0;
+
+	self.states = {};
+	self.state_name_by_hash = {};
+	self.registered_state_hashes = [];
+	self.registered_event_hashes = [];
+
+	self.default_events = undefined;
+
+	self.transitions = {};
+
+	self.resolution_enabled = false;
+	self.parent_state_name_hash = undefined;
+	self.inheritance_tree = undefined;
+	self.state_hash_to_inheritance_tree_node = undefined;
+	self.current_resolved_event = undefined;
+	self.current_event_args = undefined;
+
+	self.history_enabled = false;
+	self.history_max_size = max(0, floor(SNOWSTATE_DEFAULT_HISTORY_MAX_SIZE));
+	self.history = [];
+
+	self.broadcast_events = {};
+
+	array_push(self.registered_event_hashes, self.ENTER_HASH, self.STEP_HASH, self.EXIT_HASH, self.SUSPEND_HASH, self.RESUME_HASH);
+
+	#endregion
+
+	#region Validation
+
+	/// @desc Checks if _value is a boolean
+	/// @ignore
+	/// @param {Any} _value Value to validate
+	/// @param {String} _method_name Calling method name
+	/// @param {String} _param_name Parameter name
+	/// @returns {Struct.SnowState}
+	static __assert_bool = function(_value, _method_name, _param_name) {
+		if (!is_bool(_value) && !is_numeric(_value)) {
+			self.__snowstate_error($"{_method_name}() expects {_param_name} to be a boolean, got {typeof(_value)}.");
 		}
-				
-		// Update all the states
-		__update_states();
-				
-		// Execute "enter" event
-		if (_name == __initState) {
-			if (__execEnter) {
-				__stateStartTime = get_timer();
-				enter();
-			}
-		}
-		
 		return self;
 	};
-		
-	/// @param {string} name
-	/// @param {string} from
-	/// @param {string} to
-	/// @param {function} condition
-	/// @param {function} leave_func
-	/// @param {function} enter_func
-	/// @returns {SnowState} self
-	__add_transition = function(_transitionName, _from, _to, _condition, _leave, _enter) {
-		// Define the transition
-		var _transition = {
-			//from		: _from,
-			to			: _to,
-			condition	: _condition,
-			exists		: SNOWSTATE_TRIGGER.DEFINED,
-			leave		: _leave,
-			enter		: _enter
-		};
-				
-		if (_from == SNOWSTATE_WILDCARD_TRANSITION_NAME) {
-			// Wildcard transition
-			if (!variable_struct_exists(__wildTransitions, _transitionName)) {
-				__wildTransitions[$ _transitionName] = [];
-			}
-					
-			array_push(__wildTransitions[$ _transitionName], _transition);
+
+	/// @desc Checks if _value is callable
+	/// @ignore
+	/// @param {Any} _value Value to validate
+	/// @param {String} _method_name Calling method name
+	/// @param {String} _param_name Parameter name
+	/// @returns {Struct.SnowState}
+	static __assert_callable = function(_value, _method_name, _param_name) {
+		if (!is_callable(_value)) {
+			self.__snowstate_error($"{_method_name}() expects {_param_name} to be a function, got {typeof(_value)}.");
+		}
+		return self;
+	};
+
+	/// @desc Checks if _value is callable or undefined
+	/// @ignore
+	/// @param {Any} _value Value to validate
+	/// @param {String} _method_name Calling method name
+	/// @param {String} _param_name Parameter name
+	/// @returns {Struct.SnowState}
+	static __assert_callable_or_undefined = function(_value, _method_name, _param_name) {
+		if (!is_undefined(_value) && !is_callable(_value)) {
+			self.__snowstate_error($"{_method_name}() expects {_param_name} to be a function or undefined, got {typeof(_value)}.");
+		}
+		return self;
+	};
+
+	/// @desc Checks if _value is a valid SnowState.Event
+	/// @ignore
+	/// @param {Any} _value Value to validate
+	/// @param {String} _method_name Calling method name
+	/// @param {String} _param_name Parameter name
+	/// @returns {Struct.SnowState}
+	static __assert_event = function(_value, _method_name, _param_name) {
+		if (!is_struct(_value) || !is_instanceof(_value, self.Event)) {
+			self.__snowstate_error($"{_method_name}() expects {_param_name} to be a SnowState.Event, got {typeof(_value)}.");
+		} else if (!is_callable(_value.func)) {
+			self.__snowstate_error($"{_method_name}() expects {_param_name}.func to be a function, got {typeof(_value.func)}.");
 		} else {
-			// Normal transition
-    		if (!variable_struct_exists(__transitions, _from)) {
-    			__transitions[$ _from] = {};
-    		}
-    		if (!variable_struct_exists(__transitions[$ _from], _transitionName)) {
-    			__transitions[$ _from][$ _transitionName] = [];
-    		}
-    				
-    		array_push(__transitions[$ _from][$ _transitionName], _transition);
+			self.__assert_name(_value.name, _method_name, $"{_param_name}.name");
 		}
-			
 		return self;
 	};
-	
-	/// @param {string} event
-	/// @returns {SnowState} self
-	__add_event_method = function(_event) {
-		var _temp = {
-			exec : __execute,
-			event: _event
-		};
-		self[$ _event] = method(_temp, function() {
-			var _args = undefined;
-			if (argument_count > 0) {
-				_args = array_create(argument_count);
-				var _i = 0; repeat(argument_count) {
-					_args[_i] = argument[_i];
-					++_i;
+
+	/// @desc Checks if _value is an array of valid SnowState.Events
+	/// @ignore
+	/// @param {Any} _value Value or array of values to validate
+	/// @param {String} _method_name Calling method name
+	/// @param {String} _param_name Parameter name
+	/// @returns {Struct.SnowState}
+	static __assert_event_list = function(_value, _method_name, _param_name) {
+		var _len = array_length(_value);
+		for (var _i = 0; _i < _len; ++_i) {
+			self.__assert_event(_value[_i], _method_name, $"{_param_name}[{_i}]");
+		}
+		return self;
+	};
+
+	/// @desc Checks if _value is a hash
+	/// @ignore
+	/// @param {Any} _value Value to validate
+	/// @param {String} _method_name Calling method name
+	/// @param {String} _param_name Parameter name
+	/// @returns {Struct.SnowState}
+	static __assert_hash = function(_value, _method_name, _param_name) {
+		if (!is_numeric(_value)) {
+			self.__snowstate_error($"{_method_name} expects {_param_name} to be a hash (number), got {typeof(_value)}.");
+		}
+		return self;
+	};
+
+	/// @desc Checks if _value is a string when SNOWSTATE_ASSUME_STRING_NAMES
+	/// @ignore
+	/// @param {Any} _value Value to validate
+	/// @param {String} _method_name Calling method name
+	/// @param {String} _param_name Parameter name
+	/// @returns {Struct.SnowState}
+	static __assert_name = function(_value, _method_name, _param_name) {
+		if (SNOWSTATE_ASSUME_STRING_NAMES && !is_string(_value)) {
+			self.__snowstate_error($"{_method_name} expects {_param_name} to be a string (SNOWSTATE_ASSUME_STRING_NAMES is true), got {typeof(_value)}.");
+		}
+		return self;
+	};
+
+	/// @desc Checks if _value is a name or array of names
+	/// @ignore
+	/// @param {Any} _value Value or array of values to validate
+	/// @param {String} _method_name Calling method name
+	/// @param {String} _param_name Parameter name
+	/// @returns {Struct.SnowState}
+	static __assert_name_or_names = function(_value, _method_name, _param_name) {
+		if (!is_array(_value)) {
+			return self.__assert_name(_value, _method_name, _param_name);
+		}
+		var _len = array_length(_value);
+		for (var _i = 0; _i < _len; ++_i) {
+			self.__assert_name(_value[_i], _method_name, $"{_param_name}[{_i}]");
+		}
+		return self;
+	};
+
+	/// @desc Checks if _value is numeric
+	/// @ignore
+	/// @param {Any} _value Value to validate
+	/// @param {String} _method_name Calling method name
+	/// @param {String} _param_name Parameter name
+	/// @returns {Struct.SnowState}
+	static __assert_numeric = function(_value, _method_name, _param_name) {
+		if (!is_numeric(_value)) {
+			self.__snowstate_error($"{_method_name} expects {_param_name} to be a number, got {typeof(_value)}.");
+		}
+		return self;
+	};
+
+	/// @desc Checks if _value is a non-negative integer
+	/// @ignore
+	/// @param {Any} _value Value to validate
+	/// @param {String} _method_name Calling method name
+	/// @param {String} _param_name Parameter name
+	/// @returns {Struct.SnowState}
+	static __assert_size = function(_value, _method_name, _param_name) {
+		if (is_numeric(_value)) {
+			if ((_value < 0) || (_value != floor(_value))) {
+				self.__snowstate_error($"{_method_name}() expects {_param_name} to be a non-negative integer, got {_value}.");
+			}
+		} else {
+			self.__snowstate_error($"{_method_name}() expects {_param_name} to be a non-negative integer, got {typeof(_value)}.");
+		}
+		return self;
+	};
+
+	#endregion
+
+	#region Utility
+
+	/// @desc Throws an error
+	/// @ignore
+	/// @param {String} _message Error message
+	static __snowstate_error = function(_message) {
+		throw $"[SnowState] {_message}";
+	};
+
+	/// @desc Logs a message
+	/// @ignore
+	/// @param {String} _message Message to log
+	/// @returns {Struct.SnowState}
+	static __snowstate_trace = function(_message) {
+		show_debug_message($"[SnowState] {_message}");
+		return self;
+	};
+
+	#endregion
+
+	#region Broadcast
+
+	/// @desc Fires EV_STATE_CHANGE
+	/// @ignore
+	/// @param {String,Undefined} _transition_name Triggering transition, or undefined
+	/// @param {String} _change_kind Change kind (CHANGE/PUSH/POP)
+	/// @returns {Struct.SnowState}
+	static __broadcast_state_change = function(_transition_name, _change_kind) {
+		var _event = struct_get_from_hash(self.broadcast_events, self.EV_STATE_CHANGE);
+		if (is_undefined(_event)) return self;
+
+		var _state_change_payload = new self.StateChange(self.current_state_name, self.previous_state_name, _transition_name, _change_kind);
+		_event(_state_change_payload);
+
+		return self;
+	};
+
+	/// @desc Registers a broadcast event callback
+	/// @param {Real} _broadcast_event_name_hash Broadcast event name hash
+	/// @param {Function,Undefined} _callback Callback, or undefined to unregister
+	/// @returns {Struct.SnowState}
+	static on = function(_broadcast_event_name_hash, _callback) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_hash(_broadcast_event_name_hash, "on", "_broadcast_event_name_hash");
+			self.__assert_callable_or_undefined(_callback, "on", "_callback");
+		}
+
+		struct_set_from_hash(self.broadcast_events, _broadcast_event_name_hash, _callback);
+		return self;
+	};
+
+	#endregion
+
+	#region State
+
+	/// @desc Applies a state change
+	/// @ignore
+	/// @param {Any} _new_state_name State becoming current
+	/// @param {Real} _new_state_name_hash Hash of _new_state_name
+	/// @returns {Struct.SnowState}
+	static __apply_state_change = function(_new_state_name, _new_state_name_hash) {
+		self.previous_state_name = self.current_state_name;
+		self.current_state_name = _new_state_name;
+		self.current_state_name_hash = _new_state_name_hash;
+		self.state_version += 1;
+		if (self.history_enabled) {
+			self.__history_push_current_state();
+		}
+		return self;
+	};
+
+	/// @desc Changes to a verified state
+	/// @ignore
+	/// @param {Any} _dest_state_name Destination state
+	/// @param {Function,Undefined} _src_state_exit Source exit callback, or undefined
+	/// @param {Function,Undefined} _dest_state_enter Destination enter callback, or undefined
+	/// @param {Any} _data Data to pass to callbacks
+	/// @returns {Bool} Whether the change was applied
+	static __change_state = function(_dest_state_name, _src_state_exit, _dest_state_enter, _data) {
+		if (SNOWSTATE_CHECK_NON_EXISTENT_STATE && !struct_exists(self.states, _dest_state_name)) {
+			self.__snowstate_error($"State {_dest_state_name} not defined.");
+			return false;
+		}
+
+		var _data_array = is_undefined(_data) ? undefined : [_data];
+
+		var _previous_stack_frame_depth = self.active_stack_frame_depth;
+
+		// exit current state
+		self.active_stack_frame_depth = is_undefined(self.suspended_stack_frames) ? 0 : array_length(self.suspended_stack_frames);
+		self.__invoke_resolved_event(self.current_state_name_hash, self.EXIT_HASH, _data_array, _src_state_exit, _data);
+
+		// clear stack
+		if (!is_undefined(self.suspended_stack_frames)) {
+			for (var _i = array_length(self.suspended_stack_frames)-1; _i >= 0; --_i) {
+				self.active_stack_frame_depth = _i;
+				self.__invoke_resolved_event(self.suspended_stack_frames[_i].state_name_hash, self.EXIT_HASH, _data_array);
+			}
+			self.suspended_stack_frames = undefined;
+		}
+
+		// change state
+		self.__apply_state_change(_dest_state_name, variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _dest_state_name : string(_dest_state_name)));
+
+		// enter new state
+		self.state_timer_in_steps = 0;
+		self.active_stack_frame_depth = 0;
+		self.__invoke_resolved_event(self.current_state_name_hash, self.ENTER_HASH, _data_array, _dest_state_enter, _data);
+
+		self.active_stack_frame_depth = _previous_stack_frame_depth;
+
+		return true;
+	};
+
+	/// @desc Fires initial state's enter
+	/// @ignore
+	/// @param {Any} _state_name State just added
+	/// @returns {Struct.SnowState}
+	static __try_exec_initial_enter = function(_state_name) {
+		if (!self.exec_initial_enter) return self;
+		if (self.initial_enter_done) return self;
+
+		var _state_name_hash = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _state_name : string(_state_name));
+		if (_state_name_hash != self.initial_state_name_hash) return self;
+
+		self.initial_enter_done = true;
+
+		self.__invoke_resolved_event(_state_name_hash, self.ENTER_HASH, undefined);
+
+		return self;
+	};
+
+	/// @desc Adds a state
+	/// @param {Any} _state_name State to add
+	/// @param {Array<Struct.SnowState.Event>} [_event_or_events] Event or array of events
+	/// @returns {Struct.SnowState}
+	static add_state = function(_state_name, _event_or_events = undefined) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_state_name, "add_state", "_state_name");
+
+			if (is_array(_event_or_events)) {
+				self.__assert_event_list(_event_or_events, "add_state", "_event_or_events");
+			} else if (!is_undefined(_event_or_events)) {
+				for (var _i = 1; _i < argument_count; ++_i) {
+					self.__assert_event(argument[_i], "add_state", $"argument {_i}");
 				}
 			}
-			exec(event, undefined, _args);
-		});
-		
-		return self;
-	};
-	
-	/// @param {string} event
-	/// @returns {SnowState} self
-	__assert_event_available = function(_event) {
-		if (!variable_struct_exists(__defaultEvents, _event)) {
-			__set_default_event(_event, function() {}, SNOWSTATE_EVENT.NOT_DEFINED);
 		}
+
+		if (SNOWSTATE_SHOW_WARNING && struct_exists(self.states, _state_name)) {
+			self.__snowstate_trace($"State '{_state_name}' exists already, overwriting...");
+		}
+
+		// handle events
+		var _events_map = {};
+		if (is_array(_event_or_events)) {
+			var _event_or_events_len = array_length(_event_or_events);
+			for (var _i = 0; _i < _event_or_events_len; ++_i) {
+				var _event = _event_or_events[_i];
+				_events_map[$ _event.name] = _event.func;
+				self.__register_event(_event.name);
+			}
+		} else if (!is_undefined(_event_or_events)) {
+			for (var _i = 1; _i < argument_count; ++_i) {
+				var _event = argument[_i];
+				_events_map[$ _event.name] = _event.func;
+				self.__register_event(_event.name);
+			}
+		}
+		self.states[$ _state_name] = _events_map;
+
+		// store the hash, and the original (un-stringified) name
+		var _state_name_hash = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _state_name : string(_state_name));
+		if (!struct_exists_from_hash(self.state_name_by_hash, _state_name_hash)) {
+			array_push(self.registered_state_hashes, _state_name_hash);
+		}
+		struct_set_from_hash(self.state_name_by_hash, _state_name_hash, _state_name);
+
+		// handle resolution
+		if (self.resolution_enabled) {
+			if (!struct_exists_from_hash(self.state_hash_to_inheritance_tree_node, _state_name_hash)) {
+				struct_set_from_hash(self.state_hash_to_inheritance_tree_node, _state_name_hash, new self.InheritanceTreeNode(_state_name_hash));
+			}
+			self.__resolve_inheritance_subtree(_state_name_hash);
+		}
+
+		// initial enter
+		self.__try_exec_initial_enter(_state_name);
 
 		return self;
 	};
-	
-	/// @param {string} event
-	/// @returns {SnowState} self
-	__assert_event_name_valid = function(_event) {
-		if (variable_struct_exists(__defaultEvents, _event)) return true;
-		if (variable_struct_exists(self, _event)) {
-			__snowstate_error("Can not use \"", _event, "\" as an event.");
-			return false;
+
+	/// @desc Changes the current state
+	/// @param {Any} _dest_state_name Destination state
+	/// @param {Function} [_src_state_exit] Source exit callback, or undefined
+	/// @param {Function} [_dest_state_enter] Destination enter callback, or undefined
+	/// @param {Any} [_data] Data to pass to callbacks
+	/// @returns {Struct.SnowState}
+	static change_state = function(_dest_state_name, _src_state_exit = undefined, _dest_state_enter = undefined, _data = undefined) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_dest_state_name, "change_state", "_dest_state_name");
+			self.__assert_callable_or_undefined(_src_state_exit, "change_state", "_src_state_exit");
+			self.__assert_callable_or_undefined(_dest_state_enter, "change_state", "_dest_state_enter");
 		}
-			
-		return true;
-	};
-	
-	/// @param {string} state_name
-	/// @param {bool} [show_error]
-	/// @returns {bool} Whether the name is valid (true), or not (false)
-	__assert_state_name_valid = function(_state, _error = true) {
-		var _func = __snowstate_error;
-		if (!_error) {
-			_func = SNOWSTATE_DEBUG_WARNING ? __snowstate_trace : undefined;
+
+		if (self.__change_state(_dest_state_name, _src_state_exit, _dest_state_enter, _data)) {
+			self.__broadcast_state_change(undefined, self.CHANGE_KIND_CHANGE);
 		}
-				
-		if (!is_string(_state) || (_state == "")) {
-			if (_func != undefined) _func("State name should be a non-empty string.");
-			return false;
-		}
-				
-		var _name, _i;
-		_i = 0; repeat (array_length(__invalidStateNames)) {
-			_name = __invalidStateNames[_i]; ++_i;
-			if (_state == _name) {
-				if (_func != undefined) _func("State name can not be \"", _name, "\".");
-				return false;
-			}
-		}
-				
-		return true;
-	};
-	
-	/// @param {string} transition_name
-	/// @param {bool} [show_error]
-	/// @returns {bool} Whether the name is valid (true), or not (false)
-	__assert_transition_name_valid = function(_state, _error = true) {
-		var _func = __snowstate_error;
-		if (!_error) {
-			_func = SNOWSTATE_DEBUG_WARNING ? __snowstate_trace : undefined;
-		}
-				
-		if (!is_string(_state) || (_state == "")) {
-			if (_func != undefined) _func("Transition name should be a non-empty string.");
-			return false;
-		}
-				
-		return true;
-	};
-	
-	/// @param {string} event
-	/// @param {array<any>} [args]
-	/// @returns {SnowState} self
-	__broadcast_event = function(_event, _args) {
-		var _func = __on_events[$ _event];
-		if (_func != undefined) __func_exec(_func, _args);
-		
 		return self;
-	};
-	
-	/// @param {string} state_name
-	/// @param {function} leave_func
-	/// @param {function} enter_func
-	/// @param {struct} [data]
-	/// @returns {SnowState} self
-	__change = function(_state, _leave, _enter, _data) {
-		var _defLeave, _defEnter;
-		_defLeave = leave;
-		_defEnter = enter;
-		leave = _leave;
-		enter = _enter;
-			
-		// Leave current state
-		if (leave == undefined) leave = _defLeave;
-			else __tempEvent = _defLeave;
-		leave(_data);
-				
-		// Add to history
-		if (array_length(__childQueue) > 0) {
-			__history[@ 0] = __childQueue[0];
-			__childQueue = [];
-		}
-				
-		// Init state
-		__stateStartTime = get_timer();
-		__history_add(_state);
-				
-		// Enter next state
-		if (enter == undefined) enter = _defEnter;
-			else __tempEvent = _defEnter;
-		enter(_data);
-				
-		// Reset temp variable
-		__tempEvent = undefined;
-			
-		leave = _defLeave;
-		enter = _defEnter;
-		
-		return self;
-	};
-		
-	/// @param {struct} state_struct
-	/// @return {struct} Struct filled with all possible events
-	__create_events_struct = function(_struct) {
-		var _events = {};
-		var _arr, _i, _event, _defEvent;
-			
-		_arr = variable_struct_get_names(_struct);
-		_i = 0; repeat(array_length(_arr)) {
-			_event = _arr[_i];
-			__assert_event_name_valid(_event);
-			__assert_event_available(_event);
-			_events[$ _event] = {
-				exists: SNOWSTATE_EVENT.DEFINED,
-				func: method(__owner, _struct[$ _event])
-			};
-			++_i;
-		}
-		
-		_arr = variable_struct_get_names(__defaultEvents);
-		_i = 0; repeat(array_length(_arr)) {
-			_event = _arr[_i];
-			_defEvent = __defaultEvents[$ _event];
-			if (!variable_struct_exists(_struct, _event)) {
-				_events[$ _event] = {
-					exists: _defEvent.exists,
-					func: method(__owner, _defEvent.func)
-				};
-			}
-			++_i;
-		}
-		
-		return _events;
-	};
-		
-	/// @param {string} event
-	/// @param {string} [state_name]
-	/// @param {array} [args]
-	/// @returns {SnowState} self
-	__execute = function(_event, _state = undefined, _args = undefined) {
-		if (_state == undefined) _state = __history[0];
-		
-		if (!__is_state_defined(_state)) {
-			__snowstate_error("State \"", _state, "\" is not defined.");
-			return undefined;
-		}
-				
-		__currEvent = _event;
-		var _func = __states[$ _state][$ _event].func;
-		var _pyramid = __func_exec;
-		with (__owner) _pyramid(_func, _args);
-			
-		return self;
-	};
-	
-	/// @param {function} function
-	/// @param {array<any>} [args=undefined]
-	/// @returns {any} Return value of function
-	__func_exec = function(_func, _args = undefined) {
-		if (_args == undefined) return _func();
-		if (!is_array(_args)) return _func(_args);
-		
-		switch (array_length(_args)) {
-			case  0: return _func();
-			case  1: return _func(_args[0]);
-			case  2: return _func(_args[0], _args[1]);
-			case  3: return _func(_args[0], _args[1], _args[2]);
-			case  4: return _func(_args[0], _args[1], _args[2], _args[3]);
-			case  5: return _func(_args[0], _args[1], _args[2], _args[3], _args[4]);
-			case  6: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5]);
-			case  7: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6]);
-			case  8: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7]);
-			case  9: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8]);
-			case 10: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9]);
-			case 11: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10]);
-			case 12: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10], _args[11]);
-			case 13: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10], _args[11], _args[12]);
-			case 14: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10], _args[11], _args[12], _args[13]);
-			case 15: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10], _args[11], _args[12], _args[13], _args[14]);
-			case 16: return _func(_args[0], _args[1], _args[2], _args[3], _args[4], _args[5], _args[6], _args[7], _args[8], _args[9], _args[10], _args[11], _args[12], _args[13], _args[14], _args[15]);
-			default: __snowstate_error("Can't use more than 16 arguments."); break;
-		}
-		
-		return undefined;
 	};
 
-	/// @returns {string} The current state
-	__get_current_state = function() {
-		var _state = ((array_length(__history) > 0) ? __history[0] : undefined);
-		if (array_length(__childQueue) > 0) _state = __childQueue[0];
-		return _state;
+	/// @desc Returns the current state name
+	/// @returns {Any}
+	static get_current_state_name = function() {
+		return self.current_state_name;
 	};
-		
-	/// @param {string} state
-	/// @returns {SnowState} self
-	__history_add = function(_state) {
-		if (__historyEnabled) {
-			if (__history[1] == undefined) {
-				__history[@ 1] = __history[0];
-				__history[@ 0] = _state;
+
+	/// @desc Returns the initial state name
+	/// @returns {Any}
+	static get_initial_state_name = function() {
+		return self.initial_state_name;
+	};
+
+	/// @desc Returns the previous state name
+	/// @returns {Any,Undefined}
+	static get_previous_state_name = function() {
+		return self.previous_state_name;
+	};
+
+	/// @desc Returns all registered state names
+	/// @returns {Array<Any>} Fresh array, safe to modify
+	static get_state_names = function() {
+		var _len = array_length(self.registered_state_hashes);
+		var _names = array_create(_len);
+		for (var _i = 0; _i < _len; ++_i) {
+			_names[_i] = struct_get_from_hash(self.state_name_by_hash, self.registered_state_hashes[_i]);
+		}
+		return _names;
+	};
+
+	/// @desc Returns the current state's step timer
+	/// @returns {Real}
+	static get_time = function() {
+		return self.state_timer_in_steps;
+	};
+
+	/// @desc Sets the state timer
+	/// @param {Real} _time Timer value in steps
+	/// @returns {Struct.SnowState}
+	static set_time = function(_time) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_numeric(_time, "set_time", "_time");
+		}
+
+		self.state_timer_in_steps = _time;
+		return self;
+	};
+
+	/// @desc Checks if a state exists
+	/// @param {Any} _state_name State name to look up
+	/// @returns {Bool}
+	static state_exists = function(_state_name) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_state_name, "state_exists", "_state_name");
+		}
+
+		return struct_exists(self.states, _state_name);
+	};
+
+	/// @desc Checks if a state matches the current or ancestor states
+	/// @param {Any} _state_name State name to check
+	/// @param {Any} [_state_to_check] State to check (defaults to current)
+	/// @returns {Bool}
+	static state_is = function(_state_name, _state_to_check = undefined) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_state_name, "state_is", "_state_name");
+			if (!is_undefined(_state_to_check)) {
+				self.__assert_name(_state_to_check, "state_is", "_state_to_check");
+			}
+		}
+
+		var _state_name_hash = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _state_name : string(_state_name));
+
+		_state_to_check = _state_to_check ?? self.get_current_state_name();
+		var _state_to_check_hash = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _state_to_check : string(_state_to_check));
+		if (_state_to_check_hash == _state_name_hash) return true;
+
+		if (self.resolution_enabled) {
+			while (struct_exists_from_hash(self.parent_state_name_hash, _state_to_check_hash)) {
+				_state_to_check_hash = struct_get_from_hash(self.parent_state_name_hash, _state_to_check_hash);
+				if (_state_to_check_hash == _state_name_hash) return true;
+			}
+		}
+
+		return false;
+	};
+
+	#endregion
+
+	#region Events
+
+	/// @desc Executes an event by hash
+	/// @ignore
+	/// @param {Real} _event_name_hash Event name hash
+	/// @param {Array<Any>,Undefined} _args Arguments to forward
+	/// @returns {Struct.SnowState}
+	static __execute_event_hashed = function(_event_name_hash, _args) {
+		if (SNOWSTATE_CHECK_NON_EXISTENT_STATE && !struct_exists_from_hash(self.states, self.current_state_name_hash)) {
+			self.__snowstate_error($"State {self.current_state_name} not defined.");
+			return self;
+		}
+
+		var _state_version = self.state_version;
+		var _previous_stack_frame_depth = self.active_stack_frame_depth;
+		self.active_stack_frame_depth = is_undefined(self.suspended_stack_frames) ? 0 : array_length(self.suspended_stack_frames);
+
+		self.__invoke_resolved_event(self.current_state_name_hash, _event_name_hash, _args);
+
+		if ((_event_name_hash == self.STEP_HASH) && (self.state_version == _state_version)) {
+			self.state_timer_in_steps += 1;
+		}
+
+		self.active_stack_frame_depth = _previous_stack_frame_depth;
+
+		return self;
+	};
+
+	/// @desc Runs a state's event handler
+	/// @ignore
+	/// @param {Real} _state_name_hash State name hash
+	/// @param {Real} _event_name_hash Event name hash
+	/// @param {Array<Any>,Undefined} [_args] Arguments to forward, or none
+	/// @returns {Struct.SnowState}
+	static __execute_state_event_by_hash = function(_state_name_hash, _event_name_hash, _args = undefined) {
+		var _events = struct_get_from_hash(self.states, _state_name_hash);
+
+		if (struct_exists_from_hash(_events, _event_name_hash)) {
+			var _event = struct_get_from_hash(_events, _event_name_hash);
+			if (is_undefined(_args)) {
+				_event();
 			} else {
-				array_insert(__history, 0, _state);
-				__history_fit_contents();
-			}
-		} else {
-			__history[@ 1] = __history[0];
-			__history[@ 0] = _state;
-		}
-		
-		return self;
-	};
-		
-	/// @returns {SnowState} self
-	__history_fit_contents = function() {
-		array_resize(__history, max(2, min(__historyMaxSize, array_length(__history))));
-		return self;
-	};
-		
-	/// @returns {bool} Whether the argument is a method or a function (true), or not (false)
-	__is_really_a_method = function(_method) {
-		try {
-			return is_method(method(undefined, _method));
-		} catch (_e) {
-			return false;	
-		}
-	};
-		
-	/// @param {string} state_name
-	/// @return {bool} Whether the state is defined (true), or not (false)
-	__is_state_defined = function(_state) {
-		return (is_string(_state) && variable_struct_exists(__states, _state));
-	};
-		
-	/// @param {string} event
-	/// @param {function} method
-	/// @param {int} defined
-	/// @returns {SnowState} self
-	__set_default_event = function(_event, _method, _defined) {
-		__defaultEvents[$ _event] = {
-			exists: _defined,
-			func: _method
-		};
-		__add_event_method(_event);
-		
-		return self;
-	};
-		
-	/// @param {any} [args]
-	/// @returns {SnowState} self
-	__snowstate_error = function() {
-		var _str = "[SnowState]\n";
-		var _i = 0; repeat(argument_count) {
-			_str += string(argument[_i++]);	
-		}
-		_str += "\n\n\n";
-		show_error(_str, true);
-		return self;
-	};
-		
-	/// @param {any} [args]
-	/// @returns {SnowState} self
-	__snowstate_trace = function() {
-		var _str = "[SnowState] ";
-		var _i = 0; repeat(argument_count) {
-			_str += string(argument[_i++]);	
-		}
-		show_debug_message(_str);
-		return self;
-	};
-		
-	/// @param {string} transition_name
-	/// @param {string} from_state
-	/// @returns {int} SNOWSTATE_TRIGGER
-	__transition_exists = function(_transitionName, _from) {
-		if (_from == SNOWSTATE_WILDCARD_TRANSITION_NAME) {
-			// Wildcard transition
-			if (variable_struct_exists(__wildTransitions, _transitionName)) {
-				return SNOWSTATE_TRIGGER.DEFINED;
-			}
-		} else {
-			// Default	
-			if (variable_struct_exists(__transitions, _from) && variable_struct_exists(__transitions[$ _from], _transitionName)) {
-				return SNOWSTATE_TRIGGER.DEFINED;
-			}
-			while (variable_struct_exists(__parent, _from)) {
-				_from = __parent[$ _from];
-				if (variable_struct_exists(__transitions, _from) && variable_struct_exists(__transitions[$ _from], _transitionName)) {
-					return SNOWSTATE_TRIGGER.INHERITED;
-				}
+				method_call(_event, _args);
 			}
 		}
-				
-		return SNOWSTATE_TRIGGER.NOT_DEFINED;
-	};
-	
-	/// @param {string} transition_name
-	/// @param {struct} [data]
-	/// @returns {bool} Whether the transition has been triggered (true), or not (false)
-	__trigger = function(_transitionName, _data) {
-		if (!__assert_transition_name_valid(_transitionName)) return false;
-			
-		var _currState, _source;
-		_currState = __get_current_state();
-		_source    = _currState;
-			
-		// My triggers
-		if (__transition_exists(_transitionName, _source) == SNOWSTATE_TRIGGER.DEFINED) {
-			if (__try_triggers(__transitions[$ _source][$ _transitionName], _currState, _transitionName, _data)) return true;
-		}
-				
-		// Wild triggers
-		if (__transition_exists(_transitionName, SNOWSTATE_WILDCARD_TRANSITION_NAME) == SNOWSTATE_TRIGGER.DEFINED) {
-			if (__try_triggers(__wildTransitions[$ _transitionName], _currState, _transitionName, _data)) return true;
-		}
-			
-		// Parent triggers
-		while (variable_struct_exists(__parent, _source)) {
-			_source = __parent[$ _source];
-			if (__transition_exists(_transitionName, _source) == SNOWSTATE_TRIGGER.DEFINED) {
-				if (__try_triggers(__transitions[$ _source][$ _transitionName], _currState, _transitionName, _data)) return true;
-			}
-		}
-			
-		return false;
-	};
-	
-	/// @param {array} transitions
-	/// @param {string} source_state
-	/// @param {string} trigger_name
-	/// @param {struct} [data]
-	/// @returns {bool} Whether the trigger is successful (true), or not (false)
-	__try_triggers = function(_transitions, _source, _trigger, _data) {
-		var _transition, _dest, _i;
-		_i = 0; repeat(array_length(_transitions)) {
-			_transition = _transitions[_i]; ++_i;
-					
-			// For reflexive wildcard transitions, change to source
-			_dest = _transition.to;
-			if (_dest == SNOWSTATE_REFLEXIVE_TRANSITION_NAME) _dest = _source;
-					
-			// Check condition
-			if (_transition.condition(_data)) {
-				__change(_dest, _transition.leave, _transition.enter, _data);
-				__broadcast_event("state changed", [_dest, _source, _trigger]);
-				return true;
-			}
-		}
-					
-		return false;
-	};
-		
-	/// @param {string} state_name
-	/// @returns {SnowState} self
-	__update_events_from_parent = function(_name) {
-		var _parent, _state, _events, _event, _exists, _parEvent, _i;
-			
-		_parent = __states[$ __parent[$ _name]];
-		_state  = __states[$ _name];
-				
-		_events = variable_struct_get_names(_parent);
-		_i = 0; repeat (array_length(_events)) {
-			_event = _events[_i];
-			_parEvent = _parent[$ _event];
-					
-			_exists = SNOWSTATE_EVENT.NOT_DEFINED;
-			switch (_parEvent.exists) {
-				case SNOWSTATE_EVENT.DEFINED	: _exists = SNOWSTATE_EVENT.INHERITED;	break;	
-				case SNOWSTATE_EVENT.INHERITED	: _exists = SNOWSTATE_EVENT.INHERITED;	break;	
-				case SNOWSTATE_EVENT.DEFAULT	: _exists = SNOWSTATE_EVENT.DEFAULT;	break;
-				default: break;
-			}
-					
-			_state[$ _event] = {
-				exists: _exists,
-				func: _parEvent.func
-			};
-			++_i;
-		}
-			
-		return self;
-	};
-		
-	/// @param {bool} has_parent
-	/// @returns {SnowState} self
-	__update_states = function(_hasParent) {
-		var _states, _events, _state, _event, _defEvent, _i, _j;
-		_states = variable_struct_get_names(__states);
-		_events = variable_struct_get_names(__defaultEvents);
-		
-		_i = 0; repeat(array_length(_states)) {
-			_state = __states[$ _states[_i]];
-			_j = 0; repeat(array_length(_events)) {
-				_event = _events[_j];
-				if (!variable_struct_exists(_state, _event)) {
-					_defEvent = __defaultEvents[$ _event];
-					_state[$ _event] = {
-						exists: _defEvent.exists,
-						func: method(__owner, _defEvent.func)
-					};
-				}
-				++_j;
-			}
-			++_i;
-		}
-		
+
 		return self;
 	};
 
-	#endregion
-	
-	#region Basics
-	
-	/// @param {string} state_name
-	/// @param {struct} [state_struct]
-	/// @returns {SnowState} self
-	add = function(_name, _struct = {}) {
-		if (!__assert_state_name_valid(_name)) return undefined;
-	
-		if (!is_struct(_struct)) {
-			__snowstate_error("State struct should be a struct.");
-			return undefined;
-		}
-	
-		if (SNOWSTATE_DEBUG_WARNING && __is_state_defined(_name)) {
-			__snowstate_trace("State \"", _name, "\" has been defined already. Replacing the previous definition.");
-		}
-			
-		__add(_name, _struct, false);
-		
-		return self;
-	};
-
-	/// @param {string} state_name
-	/// @param {function} [leave_func=undefined]
-	/// @param {function} [enter_func=undefined]
-	/// @param {struct} [data=undefined]
-	/// @returns {SnowState} self
-	change = function(_state, _leave = undefined, _enter = undefined, _data = undefined) {
-		if ((_leave != undefined) && !__is_really_a_method(_leave)) {
-			__snowstate_error("Invalid value for \"leave_func\" in change(). Should be a function.");
-			return undefined;
-		}
-		
-		if ((_enter != undefined) && !__is_really_a_method(_enter)) {
-			__snowstate_error("Invalid value for \"enter_func\" in change(). Should be a function.");
-			return undefined;
-		}
-		
-		var _source = get_current_state();
-		__change(_state, _leave, _enter, _data);
-		__broadcast_event("state changed", [_state, _source]);
-		
-		return self;
-	};
-
-	/// @param {string} state_name
-	/// @param {string} [state_to_check]
-	/// @returns {bool} Whether state_name is state_to_check or a parent of state_to_check (true), or not (false)
-	state_is = function(_target, _source = get_current_state()) {
-		var _state = _source;
-		
-		if (!__assert_state_name_valid(_target)) return false;
-		if (!__assert_state_name_valid(_source)) return false;
-		
-		while (_state != undefined) {
-			if (_state == _target) return true;
-			_state = variable_struct_exists(__parent, _state) ? __parent[$ _state] : undefined;
-		}
-		
-		return false;
-	};
-	
-	/// @param {string} state_name
-	/// @returns {bool} Whether state_name exists (true), or not (false)
-	state_exists = function(_state) {
-		return variable_struct_exists(__states, _state);
-	};
-	
-	/// @returns {array} Array containing the states defined
-	get_states = function() {
-		return variable_struct_get_names(__states);	
-	};
-	
-	/// @returns {string} The current state
-	get_current_state = function() {
-		return __get_current_state();
-	};
-	
-	/// @returns {string} The previous state
-	get_previous_state = function() {
-		return ((array_length(__history) > 1) ? __history[1] : undefined);
-	};
-	
-	/// @param {bool} [in_microseconds]
-	/// @returns {number} Number of microseconds (or steps) the current state has been running for
-	get_time = function(_us = true) {
-		var _time = (get_timer()-__stateStartTime);
-		return (_us ? _time : (_time * game_get_speed(gamespeed_fps) * 1/1000000));
-	};
-	
-	/// @param {number} time
-	/// @param {bool} [in_microseconds]
-	/// @returns {SnowState} self
-	set_time = function(_time, _us = true) {
-		if (!is_real(_time)) {
-			__snowstate_error("Time should be a number");
-			return undefined;
-		}
-		
-		__stateStartTime = get_timer() - (_us ? _time : (_time * 1/game_get_speed(gamespeed_fps) * 1000000));
-		
-		return self;
-	};
-	
-	/// @param {string} event
-	/// @param {string} callback
-	/// @param {struct} [context=noone]
-	/// @returns {SnowState} self
-	on = function(_event, _callback, _context = noone) {
-		if (!is_string(_event)) {
-			__snowstate_error("Event name should be a string.");
-			return undefined;
-		}
-		
-		if (!__is_really_a_method(_callback)) {
-			__snowstate_error("Callback should be a string.");
-			return undefined;
-		}
-		
-		if (variable_struct_exists(__on_events, _event)) {
-			if (_context != noone) _callback = method(_context, _callback);
-			__on_events[$ _event] = _callback;
-		} else if (SNOWSTATE_DEBUG_WARNING) {
-			__snowstate_trace("Event \"", _event, "\" does not exist.");
-		}
-		
-		return self;
-	};
-	#endregion
-	
-	#region Inheritance
-	
-	/// @param {string} parent_state_name
-	/// @param {string} state_name
-	/// @param {struct} [state_struct]
-	/// @return {SnowState} self
-	add_child = function(_parent, _name, _struct = {}) {
-		if (!__assert_state_name_valid(_name)) return undefined;
-		if (!__assert_state_name_valid(_parent)) return undefined;
-			
-		if (!__is_state_defined(_parent)) {
-			__snowstate_error("State \"", _parent, "\" is not defined.");
-			return undefined;
-		}
-				
-		if (_parent == _name) {
-			__snowstate_error("Cannot set a state as a parent to itself.");
-			return undefined;
-		}
-	
-		if (!is_struct(_struct)) {
-			__snowstate_error("State struct should be a struct.");
-			return undefined;
-		}
-			
-		if (SNOWSTATE_DEBUG_WARNING) {
-			if (__is_state_defined(_name)) {
-				__snowstate_trace("State \"", _name, "\" has been defined already. The previous definition has been replaced.");
-			}
-				
-			if (variable_struct_exists(__parent, _name)) {
-				if (__parent[$ _name] == _parent) {
-					__snowstate_trace("State \"", _name, "\" is already a child of \"", _parent, "\".");
-				}
-			}
-		}
-			
-		__parent[$ _name] = _parent;
-		__add(_name, _struct, true);
-		
-		return self;		
-	};
-	
-	/// @returns {SnowState} self
-	inherit = function() {
-		var _state = __history[0];
-			
-		if (!variable_struct_exists(__parent, _state)) {
-			if (SNOWSTATE_DEBUG_WARNING) {
-				__snowstate_trace("State \"", _state, "\" has no parent state.");
+	/// @desc Runs a resolved event on a state
+	/// @ignore
+	/// @param {Real} _state_name_hash State name hash
+	/// @param {Real} _event_name_hash Event name hash
+	/// @param {Array<Any>,Undefined} _args_array Arguments to forward, or none
+	/// @param {Function} [_override_func] Runs instead of the resolved handler
+	/// @param {Any} [_override_arg] Single argument passed to _override_func
+	/// @returns {Struct.SnowState}
+	static __invoke_resolved_event = function(_state_name_hash, _event_name_hash, _args_array, _override_func = undefined, _override_arg = undefined) {
+		if (!self.resolution_enabled) {
+			// just do the thing
+			if (!is_undefined(_override_func)) {
+				_override_func(_override_arg);
+			} else {
+				self.__execute_state_event_by_hash(_state_name_hash, _event_name_hash, _args_array);
 			}
 			return self;
 		}
-			
-		if (SNOWSTATE_CIRCULAR_INHERITANCE_ERROR) {
-			var _str, _len, _i;
-			_len = array_length(__childQueue);
-			_str = "";
-			_i = 0; repeat (_len) {
-				if (__childQueue[_i] == _state) break;
-				++_i;
-			}
-				
-			if (_i < _len) {
-				_str += string(_state);
-				repeat (_len-_i-1) {
-					++_i;
-					_str += " -> " + string(__childQueue[_i]);
-				}
-				_str += " -> " + string(_state);
-				__snowstate_error("Circular inheritance found. Inheritance chain: ",
-								"(-> reads as \"inherits from\")\n", _str);
-				return undefined;
+
+		var _state_node = struct_get_from_hash(self.state_hash_to_inheritance_tree_node, _state_name_hash);
+		var _resolved_event = struct_get_from_hash(_state_node.active_events, _event_name_hash);
+
+		var _prev_resolved_event = self.current_resolved_event;
+		var _prev_event_args = self.current_event_args;
+
+		// set up inherit() context
+		self.current_resolved_event = _resolved_event;
+		self.current_event_args = _args_array;
+
+		if (!is_undefined(_override_func)) {
+			_override_func(_override_arg);
+		} else if (!is_undefined(_resolved_event)) {
+			if (is_undefined(_args_array)) {
+				_resolved_event.func();
+			} else {
+				method_call(_resolved_event.func, _args_array);
 			}
 		}
-			
-		array_push(__childQueue, _state);
-		_state = __parent[$ _state];
-		__history[@ 0] = _state;
-		__execute(__currEvent);
-		if (array_length(__childQueue) > 0) __history[@ 0] = array_pop(__childQueue);
-		
+
+		// revert inherit() context
+		self.current_resolved_event = _prev_resolved_event;
+		self.current_event_args = _prev_event_args;
+
 		return self;
-	};
-	
-	#endregion
-	
-	#region Events
-	
-	/// @param {string} event
-	/// @param {function} function
-	/// @returns {SnowState} self
-	event_set_default_function = function(_event, _function) {
-		if (SNOWSTATE_DEBUG_WARNING && (variable_struct_names_count(__states) > 0)) {
-			__snowstate_trace("event_set_default_function() should be called before defining any state.");
-		}
-		
-		if (!is_string(_event) || (_event == "")) {
-			__snowstate_error("Event should be a non-empty string.");
-			return undefined;
-		}
-		
-		if (!__is_really_a_method(_function)) {
-			__snowstate_error("Default function should be a function.");
-			return undefined;
-		}
-		
-		__assert_event_name_valid(_event);
-		__set_default_event(_event, method(__owner, _function), SNOWSTATE_EVENT.DEFAULT);
-		__update_states();
-		
-		return self;
-	};
-	
-	/// NOTE: This function is only meant to be used in change()
-	/// @returns {function}
-	event_get_current_function = function() {
-		return __tempEvent;
-	}
-	
-	/// @param {string} event
-	/// @returns {int} SNOWSTATE_EVENT
-	event_exists = function(_event) {
-		if (!is_string(_event) || (_event == "")) {
-			if (SNOWSTATE_DEBUG_WARNING) {
-				__snowstate_trace("Event should be a non-empty string.");
-			}
-			return SNOWSTATE_EVENT.NOT_DEFINED;
-		}
-			
-		var _state = __get_current_state();
-		if (!variable_struct_exists(__states[$ _state], _event)) return SNOWSTATE_EVENT.NOT_DEFINED;
-		return __states[$ _state][$ _event].exists;
 	};
 
-	/// @param {struct} [data]
-	/// @returns {SnowState} self
-	enter = function(_data = undefined) {
-		__execute("enter", undefined, _data);
+	/// @desc Registers an event name
+	/// @ignore
+	/// @param {Any} _event_name Event name to register
+	/// @returns {Struct.SnowState}
+	static __register_event = function(_event_name) {
+		var _event_name_hash = variable_get_hash(_event_name);
+		if (!array_contains(self.registered_event_hashes, _event_name_hash)) {
+			array_push(self.registered_event_hashes, _event_name_hash);
+		}
 		return self;
 	};
-	
-	/// @param {struct} [data]
-	/// @returns {SnowState} self
-	leave = function(_data = undefined) {
-		__execute("leave", undefined, _data);
+
+	/// @desc Checks if an event exists
+	/// @param {String} _event_name Event name to check
+	/// @returns {Bool}
+	static event_exists = function(_event_name) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_event_name, "event_exists", "_event_name");
+		}
+
+		if (!SNOWSTATE_ASSUME_STRING_NAMES) _event_name = string(_event_name);
+		return array_contains(self.registered_event_hashes, variable_get_hash(_event_name));
+	};
+
+	/// @desc Sets an event's default function
+	/// @param {String} _event_name Event name
+	/// @param {Function} _function Default function to assign
+	/// @returns {Struct.SnowState}
+	static event_set_default_function = function(_event_name, _function) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_event_name, "event_set_default_function", "_event_name");
+			self.__assert_callable(_function, "event_set_default_function", "_function");
+		}
+
+		if (!SNOWSTATE_ASSUME_STRING_NAMES) _event_name = string(_event_name);
+
+		self.__enable_event_resolution();
+
+		if (is_undefined(self.default_events)) {
+			self.default_events = {};
+		}
+		struct_set(self.default_events, _event_name, new self.ResolvedEvent(_function, undefined, true));
+
+		self.__register_event(_event_name);
+		self.__resolve_all_states();
+
 		return self;
 	};
-	
+
+	/// @desc Executes a named event
+	/// @param {String} _event_name Event to execute
+	/// @param {Any} [_args] Arguments to forward to handler
+	/// @returns {Struct.SnowState}
+	static execute_event = function(_event_name) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_event_name, "execute_event", "_event_name");
+		}
+
+		if (!SNOWSTATE_ASSUME_STRING_NAMES) {
+			_event_name = string(_event_name);
+		}
+
+		var _args = undefined;
+		if (argument_count > 1) {
+			_args = array_create(argument_count-1);
+			for (var _i = 1; _i < argument_count; ++_i) {
+				_args[_i-1] = argument[_i];
+			}
+		}
+
+		return self.__execute_event_hashed(variable_get_hash(_event_name), _args);
+	};
+
+	/// @desc Executes an event by precomputed hash
+	/// @param {Real} _event_name_hash Event name hash
+	/// @param {Any} [_args] Arguments to forward to handler
+	/// @returns {Struct.SnowState}
+	static execute_event_by_hash = function(_event_name_hash) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_hash(_event_name_hash, "execute_event_by_hash", "_event_name_hash");
+		}
+
+		var _args = undefined;
+		if (argument_count > 1) {
+			_args = array_create(argument_count-1);
+			for (var _i = 1; _i < argument_count; ++_i) {
+				_args[_i-1] = argument[_i];
+			}
+		}
+
+		return self.__execute_event_hashed(_event_name_hash, _args);
+	};
+
 	#endregion
-	
+
+	#region Stack
+
+	/// @desc Dispatches an event to a stack frame
+	/// @ignore
+	/// @param {Real} _depth Frame depth from stack base
+	/// @param {Real} _event_name_hash Event name hash
+	/// @param {Array<Any>,Undefined} _args Arguments to forward
+	/// @returns {Struct.SnowState}
+	static __execute_event_at_depth = function(_depth, _event_name_hash, _args) {
+		var _top_depth = is_undefined(self.suspended_stack_frames) ? 0 : array_length(self.suspended_stack_frames);
+		if ((_depth < 0) || (_depth > _top_depth)) return self;
+
+		var _is_current = (_depth == _top_depth);
+		var _state_hash = _is_current ? self.current_state_name_hash : self.suspended_stack_frames[_depth].state_name_hash;
+
+		if (SNOWSTATE_CHECK_NON_EXISTENT_STATE && !struct_exists_from_hash(self.states, _state_hash)) {
+			var _state_name = _is_current ? self.current_state_name : self.suspended_stack_frames[_depth].state_name;
+			self.__snowstate_error($"State '{_state_name}' not defined.");
+			return self;
+		}
+
+		var _previous_stack_frame_depth = self.active_stack_frame_depth;
+		var _state_version = self.state_version;
+
+		self.active_stack_frame_depth = _depth;
+		self.__invoke_resolved_event(_state_hash, _event_name_hash, _args);
+
+		if ((_event_name_hash == self.STEP_HASH) && (self.state_version == _state_version)) {
+			if (_is_current) {
+				self.state_timer_in_steps += 1;
+			} else {
+				self.suspended_stack_frames[_depth].state_timer_in_steps += 1;
+			}
+		}
+
+		self.active_stack_frame_depth = _previous_stack_frame_depth;
+
+		return self;
+	};
+
+	/// @desc Pushes a state
+	/// @ignore
+	/// @param {Any} _state_name State to push
+	/// @param {Any} _data Data for suspend/enter handlers
+	/// @param {String,Undefined} _transition_name Triggering transition, or undefined
+	/// @returns {Struct.SnowState}
+	static __push_state = function(_state_name, _data, _transition_name) {
+		if (SNOWSTATE_CHECK_NON_EXISTENT_STATE && !struct_exists(self.states, _state_name)) {
+			self.__snowstate_error($"State {_state_name} not defined.");
+			return self;
+		}
+
+		var _data_array = is_undefined(_data) ? undefined : [_data];
+
+		var _previous_stack_frame_depth = self.active_stack_frame_depth;
+
+		// suspend current state
+		self.active_stack_frame_depth = is_undefined(self.suspended_stack_frames) ? 0 : array_length(self.suspended_stack_frames);
+		self.__invoke_resolved_event(self.current_state_name_hash, self.SUSPEND_HASH, _data_array);
+
+		// push stack frame
+		if (is_undefined(self.suspended_stack_frames)) {
+			self.suspended_stack_frames = [];
+		}
+		array_push(self.suspended_stack_frames, new self.StackFrame(self.current_state_name, self.current_state_name_hash, self.state_timer_in_steps));
+
+		// change state
+		self.__apply_state_change(_state_name, variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _state_name : string(_state_name)));
+		self.state_timer_in_steps = 0;
+
+		// enter new state
+		self.active_stack_frame_depth = array_length(self.suspended_stack_frames);
+		self.__invoke_resolved_event(self.current_state_name_hash, self.ENTER_HASH, _data_array);
+
+		self.active_stack_frame_depth = _previous_stack_frame_depth;
+
+		self.__broadcast_state_change(_transition_name, self.CHANGE_KIND_PUSH);
+
+		return self;
+	};
+
+	/// @desc Executes a named event on a stack frame
+	/// @param {Real} _depth Frame depth from stack base
+	/// @param {String} _event_name Event to execute
+	/// @param {Any} [_args] Arguments to forward to handler
+	/// @returns {Struct.SnowState}
+	static execute_event_at_depth = function(_depth, _event_name) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_numeric(_depth, "execute_event_at_depth", "_depth");
+			self.__assert_name(_event_name, "execute_event_at_depth", "_event_name");
+		}
+
+		var _args = undefined;
+		if (argument_count > 2) {
+			_args = array_create(argument_count-2);
+			for (var _i = 2; _i < argument_count; ++_i) {
+				_args[_i-2] = argument[_i];
+			}
+		}
+
+		return self.__execute_event_at_depth(_depth,
+			variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _event_name : string(_event_name)),
+			_args);
+	};
+
+	/// @desc Executes an event on a stack frame by hash
+	/// @param {Real} _depth Frame depth from stack base
+	/// @param {Real} _event_name_hash Event name hash
+	/// @param {Any} [_args] Arguments to forward to handler
+	/// @returns {Struct.SnowState}
+	static execute_event_at_depth_by_hash = function(_depth, _event_name_hash) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_numeric(_depth, "execute_event_at_depth_by_hash", "_depth");
+			self.__assert_hash(_event_name_hash, "execute_event_at_depth_by_hash", "_event_name_hash");
+		}
+
+		var _args = undefined;
+		if (argument_count > 2) {
+			_args = array_create(argument_count-2);
+			for (var _i = 2; _i < argument_count; ++_i) {
+				_args[_i-2] = argument[_i];
+			}
+		}
+
+		return self.__execute_event_at_depth(_depth, _event_name_hash, _args);
+	};
+
+	/// @desc Executes a named event on the frame below
+	/// @param {String} _event_name Event to execute
+	/// @param {Any} [_args] Arguments to forward to handler
+	/// @returns {Struct.SnowState}
+	static execute_event_below = function(_event_name) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_event_name, "execute_event_below", "_event_name");
+		}
+
+		var _args = undefined;
+		if (argument_count > 1) {
+			_args = array_create(argument_count-1);
+			for (var _i = 1; _i < argument_count; ++_i) {
+				_args[_i-1] = argument[_i];
+			}
+		}
+
+		return self.__execute_event_at_depth(
+			self.active_stack_frame_depth-1,
+			variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _event_name : string(_event_name)),
+			_args
+		);
+	};
+
+	/// @desc Executes an event on the frame below by hash
+	/// @param {Real} _event_name_hash Event name hash
+	/// @param {Any} [_args] Arguments to forward to handler
+	/// @returns {Struct.SnowState}
+	static execute_event_below_by_hash = function(_event_name_hash) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_hash(_event_name_hash, "execute_event_below_by_hash", "_event_name_hash");
+		}
+
+		var _args = undefined;
+		if (argument_count > 1) {
+			_args = array_create(argument_count-1);
+			for (var _i = 1; _i < argument_count; ++_i) {
+				_args[_i-1] = argument[_i];
+			}
+		}
+
+		return self.__execute_event_at_depth(self.active_stack_frame_depth-1, _event_name_hash, _args);
+	};
+
+	/// @desc Returns the state stack
+	/// @returns {Array<Any>} Fresh array, safe to modify
+	static get_stack = function() {
+		if (is_undefined(self.suspended_stack_frames)) return [self.current_state_name];
+
+		var _len = array_length(self.suspended_stack_frames);
+		var _names = array_create(_len+1);
+		for (var _i = 0; _i < _len; ++_i) {
+			_names[_i] = self.suspended_stack_frames[_i].state_name;
+		}
+		_names[_len] = self.current_state_name;
+
+		return _names;
+	};
+
+	/// @desc Returns the stack depth
+	/// @returns {Real}
+	static get_stack_depth = function() {
+		return is_undefined(self.suspended_stack_frames) ? 1 : (array_length(self.suspended_stack_frames) + 1);
+	};
+
+	/// @desc Pops the state stack
+	/// @param {Any} [_data] Data for exit/resume handlers
+	/// @returns {Struct.SnowState}
+	static pop_state = function(_data = undefined) {
+		if (is_undefined(self.suspended_stack_frames) || (array_length(self.suspended_stack_frames) == 0)) {
+			if (SNOWSTATE_SHOW_WARNING) self.__snowstate_trace($"Cannot pop state '{self.current_state_name}', the stack is already flat.");
+			return self;
+		}
+
+		var _data_array = is_undefined(_data) ? undefined : [_data];
+
+		var _previous_stack_frame_depth = self.active_stack_frame_depth;
+
+		// exit current state
+		self.active_stack_frame_depth = array_length(self.suspended_stack_frames);
+		self.__invoke_resolved_event(self.current_state_name_hash, self.EXIT_HASH, _data_array);
+
+		// pop stack frame
+		var _frame = array_pop(self.suspended_stack_frames);
+		if (array_length(self.suspended_stack_frames) == 0) {
+			self.suspended_stack_frames = undefined;
+		}
+
+		// change state
+		self.__apply_state_change(_frame.state_name, _frame.state_name_hash);
+		self.state_timer_in_steps = _frame.state_timer_in_steps;
+
+		// resume previous state
+		self.active_stack_frame_depth = is_undefined(self.suspended_stack_frames) ? 0 : array_length(self.suspended_stack_frames);
+		self.__invoke_resolved_event(self.current_state_name_hash, self.RESUME_HASH, _data_array);
+
+		self.active_stack_frame_depth = _previous_stack_frame_depth;
+
+		self.__broadcast_state_change(undefined, self.CHANGE_KIND_POP);
+
+		return self;
+	};
+
+	/// @desc Pushes a state onto the stack
+	/// @param {Any} _state_name State to push
+	/// @param {Any} [_data] Data for suspend/enter handlers
+	/// @returns {Struct.SnowState}
+	static push_state = function(_state_name, _data = undefined) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_state_name, "push_state", "_state_name");
+		}
+
+		return self.__push_state(_state_name, _data, undefined);
+	};
+
+	#endregion
+
+	#region Inheritance
+
+	/// @desc Checks for circular inheritance
+	/// @ignore
+	/// @param {Any} _src_state_name Child state being (re)parented
+	/// @param {Any} _parent_state_name Proposed parent state
+	/// @returns {Struct.SnowState}
+	static __assert_non_circular_inheritance = function(_src_state_name, _parent_state_name) {
+		var _src_state_name_hash = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _src_state_name : string(_src_state_name));
+		var _current_state_name_hash = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _parent_state_name : string(_parent_state_name));
+		while (true) {
+			if (_current_state_name_hash == _src_state_name_hash) {
+				self.__snowstate_error($"Circular inheritance found for '{_src_state_name}'.");
+			}
+			if (!struct_exists_from_hash(self.parent_state_name_hash, _current_state_name_hash)) break;
+			_current_state_name_hash = struct_get_from_hash(self.parent_state_name_hash, _current_state_name_hash);
+		}
+		return self;
+	};
+
+	/// @desc Enables event resolution
+	/// @ignore
+	/// @returns {Struct.SnowState}
+	static __enable_event_resolution = function() {
+		if (self.resolution_enabled) return self;
+
+		self.resolution_enabled = true;
+		self.inheritance_tree = {};
+		self.state_hash_to_inheritance_tree_node = {};
+		self.parent_state_name_hash = {};
+		var _existing_names = struct_get_names(self.states);
+		for (var _i = 0; _i < array_length(_existing_names); ++_i) {
+			var _existing_hash = variable_get_hash(_existing_names[_i]);
+			struct_set_from_hash(self.state_hash_to_inheritance_tree_node, _existing_hash,
+				new self.InheritanceTreeNode(_existing_hash));
+		}
+
+		return self.__resolve_all_states();
+	};
+
+	/// @desc Resolves all states
+	/// @ignore
+	/// @returns {Struct.SnowState}
+	static __resolve_all_states = function() {
+		var _names = struct_get_names(self.states);
+		var _names_len = array_length(_names);
+
+		for (var _i = 0; _i < _names_len; ++_i) {
+			var _hash = variable_get_hash(_names[_i]);
+			if (struct_exists_from_hash(self.parent_state_name_hash, _hash)) {
+				// not a root
+				continue;
+			}
+			self.__resolve_inheritance_subtree(_hash);
+		}
+
+		return self;
+	};
+
+	/// @desc Resolves a state's inheritance subtree
+	/// @ignore
+	/// @param {Real} _state_hash State hash to resolve
+	static __resolve_inheritance_subtree = function(_state_hash) {
+		var _node = struct_get_from_hash(self.state_hash_to_inheritance_tree_node, _state_hash);
+		var _state_events = struct_get_from_hash(self.states, _state_hash);
+		var _active_events = {};
+
+		var _parent_hash = struct_get_from_hash(self.parent_state_name_hash, _state_hash);
+		var _parent_events = undefined;
+		if (!is_undefined(_parent_hash)) {
+			var _parent_node = struct_get_from_hash(self.state_hash_to_inheritance_tree_node, _parent_hash);
+			_parent_events = _parent_node.active_events;
+		}
+
+		var _reg_events_len = array_length(self.registered_event_hashes);
+		for (var _i = 0; _i < _reg_events_len; ++_i) {
+			var _ev_hash = self.registered_event_hashes[_i];
+
+			var _inherited_event = is_undefined(_parent_events) ? undefined : struct_get_from_hash(_parent_events, _ev_hash);
+			if (!is_undefined(_inherited_event) && _inherited_event.is_default) {
+				// a default event is not part of inheritance, ignore
+				_inherited_event = undefined;
+			}
+
+			var _own_event = struct_get_from_hash(_state_events, _ev_hash);
+			if (!is_undefined(_own_event)) {
+				// has own event
+				struct_set_from_hash(_active_events, _ev_hash, new self.ResolvedEvent(_own_event, _inherited_event));
+			} else if (!is_undefined(_inherited_event)) {
+				// has parent event
+				struct_set_from_hash(_active_events, _ev_hash, _inherited_event);
+			} else if (!is_undefined(self.default_events)) {
+				// if nothing is declared, check default
+				var _default_event = struct_get_from_hash(self.default_events, _ev_hash);
+				if (!is_undefined(_default_event)) {
+					struct_set_from_hash(_active_events, _ev_hash, _default_event);
+				}
+			}
+		}
+
+		_node.active_events = _active_events;
+
+		// resolve descendants
+		if (struct_exists_from_hash(self.inheritance_tree, _state_hash)) {
+			var _children = struct_get_from_hash(self.inheritance_tree, _state_hash);
+			for (var _i = 0; _i < array_length(_children); ++_i) {
+				self.__resolve_inheritance_subtree(_children[_i]);
+			}
+		}
+	};
+
+	/// @desc Adds a child state
+	/// @param {Any} _parent_state_name Parent state to inherit from
+	/// @param {Any} _state_name Child state to add
+	/// @param {Array<Struct.SnowState.Event>} [_event_or_events] Event handlers, or none
+	/// @returns {Struct.SnowState}
+	static add_child_state = function(_parent_state_name, _state_name, _event_or_events = undefined) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_parent_state_name, "add_child_state", "_parent_state_name");
+			self.__assert_name(_state_name, "add_child_state", "_state_name");
+			if (is_array(_event_or_events)) {
+				self.__assert_event_list(_event_or_events, "add_child_state", "_event_or_events");
+			} else if (!is_undefined(_event_or_events)) {
+				for (var _i = 1; _i < argument_count; ++_i) {
+					self.__assert_event(argument[_i], "add_child_state", $"argument {_i}");
+				}
+			}
+		}
+
+		if (SNOWSTATE_CHECK_NON_EXISTENT_STATE && !struct_exists(self.states, _parent_state_name)) {
+			if (SNOWSTATE_SHOW_WARNING) self.__snowstate_trace($"Parent state '{_parent_state_name}' not defined, state '{_state_name}' not added.");
+			return self;
+		}
+
+		self.__enable_event_resolution();
+
+		var _parent_state_name_hash = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _parent_state_name : string(_parent_state_name));
+		var _state_name_hash = variable_get_hash(SNOWSTATE_ASSUME_STRING_NAMES ? _state_name : string(_state_name));
+
+		if (SNOWSTATE_CHECK_CIRCULAR_INHERITANCE) {
+			self.__assert_non_circular_inheritance(_state_name, _parent_state_name);
+		}
+
+		// only add the state, initial enter is handled later
+		var _exec_initial_enter = self.exec_initial_enter;
+		self.exec_initial_enter = false;
+		self.add_state(_state_name, _event_or_events);
+		self.exec_initial_enter = _exec_initial_enter;
+
+		// handle inheritance
+		if (struct_exists_from_hash(self.parent_state_name_hash, _state_name_hash)) {
+			var _old_parent_state_name_hash = struct_get_from_hash(self.parent_state_name_hash, _state_name_hash);
+			if (_old_parent_state_name_hash != _parent_state_name_hash) {
+				// needs re-parenting
+				if (SNOWSTATE_SHOW_WARNING) {
+					var _old_parent_state_name = struct_get_from_hash(self.state_name_by_hash, _old_parent_state_name_hash);
+					self.__snowstate_trace($"State '{_state_name}' already has parent '{_old_parent_state_name}', re-parenting to '{_parent_state_name}'.");
+				}
+				// remove state from old parent children list
+				var _old_children = struct_get_from_hash(self.inheritance_tree, _old_parent_state_name_hash);
+				if (!is_undefined(_old_children)) {
+					var _old_child_index = array_get_index(_old_children, _state_name_hash);
+					if (_old_child_index >= 0) {
+						array_delete(_old_children, _old_child_index, 1);
+					}
+				}
+			}
+		}
+
+		struct_set_from_hash(self.parent_state_name_hash, _state_name_hash, _parent_state_name_hash);
+
+		// update children list for the parent
+		var _children = struct_get_from_hash(self.inheritance_tree, _parent_state_name_hash);
+		if (is_undefined(_children)) {
+			_children = [];
+			struct_set_from_hash(self.inheritance_tree, _parent_state_name_hash, _children);
+		}
+		if (!array_contains(_children, _state_name_hash)) {
+			array_push(_children, _state_name_hash);
+		}
+		self.__resolve_inheritance_subtree(_state_name_hash);
+
+		// finally, handle initial enter
+		self.__try_exec_initial_enter(_state_name);
+
+		return self;
+	};
+
+	/// @desc Runs the overridden handler
+	/// @returns {Struct.SnowState}
+	static inherit = function() {
+		var _current_event = self.current_resolved_event;
+		if (is_undefined(_current_event)) return self;
+
+		var _parent_event = _current_event.parent_resolved_event;
+		if (is_undefined(_parent_event)) return self;
+
+		var _prev_event_args = self.current_event_args;
+
+		var _args = _prev_event_args;
+		if (argument_count > 0) {
+			_args = array_create(argument_count);
+			for (var _i = 0; _i < argument_count; ++_i) {
+				_args[_i] = argument[_i];
+			}
+		}
+
+		self.current_resolved_event = _parent_event;
+		self.current_event_args = _args;
+
+		if (is_undefined(_args)) {
+			_parent_event.func();
+		} else {
+			method_call(_parent_event.func, _args);
+		}
+
+		self.current_resolved_event = _current_event;
+		self.current_event_args = _prev_event_args;
+
+		return self;
+	};
+
+	#endregion
+
 	#region Transitions
 
-	/// @param {string} transition_name
-	/// @param {string/array} source_state
-	/// @param {string} dest_state
-	/// @param {function} [condition]
-	/// @param {function} [leave_func]
-	/// @param {function} [enter_func]
-	/// @returns {SnowState} self
-	add_transition = function(_transitionName, _source, _dest, _condition = function() { return true; }, _leave = leave, _enter = enter) {
-		if (!__assert_transition_name_valid(_transitionName)) return undefined;
-		if (!is_string(_dest) || (_dest == "")) {
-			__snowstate_error("State name should be a non-empty string.");
-			return undefined;
+	/// @desc Adds a transition
+	/// @ignore
+	/// @param {String} _transition_name Transition name
+	/// @param {String,Array<String>} _src_state_name_or_names Source state name(s)
+	/// @param {String} _dest_state_name Destination state (or "=" for reflexive)
+	/// @param {Function,Undefined} _condition Condition function, or undefined
+	/// @param {Function,Undefined} _src_state_exit Source exit callback, or undefined
+	/// @param {Function,Undefined} _dest_state_enter Destination enter callback, or undefined
+	/// @param {Bool} _is_push Whether to push instead of replace
+	/// @returns {Struct.SnowState}
+	static __add_transition = function(_transition_name, _src_state_name_or_names, _dest_state_name, _condition, _src_state_exit, _dest_state_enter, _is_push) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_transition_name, "add_transition", "_transition_name");
+			self.__assert_name_or_names(_src_state_name_or_names, "add_transition", "_src_state_name_or_names");
+			self.__assert_name(_dest_state_name, "add_transition", "_dest_state_name");
+			self.__assert_callable_or_undefined(_condition, "add_transition", "_condition");
+			self.__assert_callable_or_undefined(_src_state_exit, "add_transition", "_src_state_exit");
+			self.__assert_callable_or_undefined(_dest_state_enter, "add_transition", "_dest_state_enter");
 		}
-		if (_dest == SNOWSTATE_WILDCARD_TRANSITION_NAME) {
-			__snowstate_error("Destination state name can not be the same as SNOWSTATE_WILDCARD_TRANSITION_NAME.");
-			return undefined;
-		}
-			
-		if (!__is_really_a_method(_condition)) {
-			__snowstate_error("Invalid value for \"condition\" in add_transition(). Should be a function.");
-			return undefined;
-		}
-		if (!__is_really_a_method(_leave)) {
-			__snowstate_error("Invalid value for \"leave_func\" in add_transition(). Should be a function.");
-			return undefined;
-		}
-		if (!__is_really_a_method(_enter)) {
-			__snowstate_error("Invalid value for \"enter_func\" in add_transition(). Should be a function.");
-			return undefined;
-		}
-			
-		if (!is_array(_source)) _source = [_source];
-			
-		var _i, _from;
-		_i = 0; repeat (array_length(_source)) {
-			_from = _source[_i]; ++_i;
-			if (!is_string(_from) || (_from == "")) {
-				if (SNOWSTATE_DEBUG_WARNING) {
-					__snowstate_trace("State name should be a non-empty string. Transition not added.");	
-				}
-			} else if (_from == SNOWSTATE_REFLEXIVE_TRANSITION_NAME) {
-				if (SNOWSTATE_DEBUG_WARNING) {
-					__snowstate_trace("Source state name can not be the same as SNOWSTATE_REFLEXIVE_TRANSITION_NAME. Transition not added.");	
-				}
-			} else {
-				__add_transition(_transitionName, _from, _dest, _condition, _leave, _enter);
+
+		if (!SNOWSTATE_ASSUME_STRING_NAMES) {
+			_transition_name = string(_transition_name);
+			if (!is_array(_src_state_name_or_names)) {
+				_src_state_name_or_names = string(_src_state_name_or_names);
+				if (_dest_state_name != SNOWSTATE_REFLEXIVE_TRANSITION_NAME) _dest_state_name = string(_dest_state_name);
 			}
 		}
-		
-		return self;
-	};
-	
-	/// @param {string} transition_name
-	/// @param {string} dest_state
-	/// @param {function} [condition]
-	/// @param {function} [leave_func]
-	/// @param {function} [enter_func]
-	/// @returns {SnowState} self
-	add_wildcard_transition = function(_transitionName, _dest, _condition = function() { return true; }, _leave = undefined, _enter = undefined) {
-		return add_transition(_transitionName, SNOWSTATE_WILDCARD_TRANSITION_NAME, _dest, _condition, _leave, _enter);
-	};
-	
-	/// @param {string} transition_name
-	/// @param {string/array} source_state
-	/// @param {function} [condition]
-	/// @param {function} [leave_func]
-	/// @param {function} [enter_func]
-	/// @returns {SnowState} self
-	add_reflexive_transition = function(_transitionName, _source, _condition = function() { return true; }, _leave = undefined, _enter = undefined) {
-		return add_transition(_transitionName, _source, SNOWSTATE_REFLEXIVE_TRANSITION_NAME, _condition, _leave, _enter);
-	};
-	
-	/// @param {string} transition_name
-	/// @param {string} source_state
-	/// @returns {int} SNOWSTATE_TRIGGER
-	transition_exists = function(_transitionName, _source) {
-		if (!is_string(_transitionName)) return false;
-		if (!is_string(_source)) return false;
-		if (_source == SNOWSTATE_WILDCARD_TRANSITION_NAME) return true;
-		
-		if (!__assert_transition_name_valid(_transitionName, false)) return false;
-			
-		return __transition_exists(_transitionName, _source);
-	};
-	
-	/// @param {string|array} transition_name
-	/// @param {struct} [data=undefined]
-	/// @returns {bool} Whether a transition has been triggered (true), or not (false)
-	trigger = function(_transition, _data = undefined) {
-		if (is_array(_transition)) {
-			var _i = 0; repeat (array_length(_transition)) {
-				if (__trigger(_transition[_i], _data)) return true;
-				++_i;
+
+		if (is_array(_src_state_name_or_names)) {
+			var _src_state_names_len = array_length(_src_state_name_or_names);
+			for (var _i = 0; _i < _src_state_names_len; ++_i) {
+				self.__add_transition(_transition_name, _src_state_name_or_names[_i], _dest_state_name, _condition, _src_state_exit, _dest_state_enter, _is_push);
 			}
-			return false;
 		} else {
-			return __trigger(_transition, _data);
+			if (!struct_exists(self.transitions, _transition_name)) {
+				self.transitions[$ _transition_name] = {};
+			}
+			if (!struct_exists(self.transitions[$ _transition_name], _src_state_name_or_names)) {
+				self.transitions[$ _transition_name][$ _src_state_name_or_names] = [];
+			}
+			var _transition = new self.Transition(_transition_name, _src_state_name_or_names, _dest_state_name, _condition, _src_state_exit, _dest_state_enter, _is_push);
+			array_push(self.transitions[$ _transition_name][$ _src_state_name_or_names], _transition);
 		}
-	}
+
+		return self;
+	};
+
+	/// @desc Runs the first passing trigger
+	/// @ignore
+	/// @param {Array<Struct.SnowState.Transition>,Undefined} _triggers Candidate transitions
+	/// @param {Any} _data Data for condition/callbacks
+	/// @returns {Bool} Whether a trigger fired
+	static __try_triggers = function(_triggers, _data) {
+		if (is_undefined(_triggers)) return false;
+
+		var _triggers_len = array_length(_triggers);
+		for (var _i = 0; _i < _triggers_len; ++_i) {
+			var _transition = _triggers[_i];
+			if (is_undefined(_transition.condition) || _transition.condition(_data)) {
+				var _dest_state_name = _transition.dest_state_name;
+				if (_dest_state_name == SNOWSTATE_REFLEXIVE_TRANSITION_NAME) {
+					_dest_state_name = self.current_state_name;
+				}
+
+				if (_transition.is_push) {
+					self.__push_state(_dest_state_name, _data, _transition.transition_name);
+					return true;
+				} else if (self.__change_state(_dest_state_name, _transition.src_state_exit, _transition.dest_state_enter, _data)) {
+					self.__broadcast_state_change(_transition.transition_name, self.CHANGE_KIND_CHANGE);
+					return true;
+				} else {
+					if (SNOWSTATE_SHOW_WARNING) {
+						self.__snowstate_trace($"Transition '{_transition.transition_name}' matched but the change to '{_dest_state_name}' failed, nothing was broadcast.");
+					}
+					return false;
+				}
+			}
+		}
+		return false;
+	};
+
+	/// @desc Adds a push transition
+	/// @param {String} _transition_name Transition name
+	/// @param {String,Array<String>} _src_state_name_or_names Source state name(s)
+	/// @param {String} _dest_state_name State to push
+	/// @param {Function} [_condition] Condition for the push
+	/// @returns {Struct.SnowState}
+	static add_push_transition = function(_transition_name, _src_state_name_or_names, _dest_state_name, _condition = undefined) {
+		return self.__add_transition(_transition_name, _src_state_name_or_names, _dest_state_name, _condition, undefined, undefined, true);
+	};
+
+	/// @desc Adds a reflexive transition
+	/// @param {String} _transition_name Transition name
+	/// @param {String,Array<String>} _src_state_name_or_names Source state name(s)
+	/// @param {Function} [_condition] Condition function, or undefined
+	/// @param {Function} [_src_state_exit] Source exit callback, or undefined
+	/// @param {Function} [_dest_state_enter] Destination enter callback, or undefined
+	/// @returns {Struct.SnowState}
+	static add_reflexive_transition = function(_transition_name, _src_state_name_or_names, _condition = undefined, _src_state_exit = undefined, _dest_state_enter = undefined) {
+		return self.add_transition(_transition_name, _src_state_name_or_names, SNOWSTATE_REFLEXIVE_TRANSITION_NAME, _condition, _src_state_exit, _dest_state_enter);
+	};
+
+	/// @desc Adds a transition
+	/// @param {String} _transition_name Transition name
+	/// @param {String,Array<String>} _src_state_name_or_names Source state name(s)
+	/// @param {String} _dest_state_name Destination state
+	/// @param {Function} [_condition] Condition for the transition
+	/// @param {Function} [_src_state_exit] Source exit callback, or undefined
+	/// @param {Function} [_dest_state_enter] Destination enter callback, or undefined
+	/// @returns {Struct.SnowState}
+	static add_transition = function(_transition_name, _src_state_name_or_names, _dest_state_name, _condition = undefined, _src_state_exit = undefined, _dest_state_enter = undefined) {
+		return self.__add_transition(_transition_name, _src_state_name_or_names, _dest_state_name, _condition, _src_state_exit, _dest_state_enter, false);
+	};
+
+	/// @desc Adds a wildcard transition
+	/// @param {String} _transition_name Transition name
+	/// @param {String} _dest_state_name Destination state
+	/// @param {Function} [_condition] Condition function, or undefined
+	/// @param {Function} [_src_state_exit] Source exit callback, or undefined
+	/// @param {Function} [_dest_state_enter] Destination enter callback, or undefined
+	/// @returns {Struct.SnowState}
+	static add_wildcard_transition = function(_transition_name, _dest_state_name, _condition = undefined, _src_state_exit = undefined, _dest_state_enter = undefined) {
+		return self.add_transition(_transition_name, SNOWSTATE_WILDCARD_TRANSITION_NAME, _dest_state_name, _condition, _src_state_exit, _dest_state_enter);
+	};
+
+	/// @desc Checks if a transition exists
+	/// @param {String} _transition_name Transition name to check
+	/// @returns {Bool}
+	static transition_exists = function(_transition_name) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_transition_name, "transition_exists", "_transition_name");
+		}
+		if (!SNOWSTATE_ASSUME_STRING_NAMES) _transition_name = string(_transition_name);
+
+		return struct_exists(self.transitions, _transition_name);
+	};
+
+	/// @desc Checks if a transition exists for a state
+	/// @param {String} _transition_name Transition name to check
+	/// @param {String} _source_state_name Source state to check
+	/// @returns {Bool}
+	static transition_for_state_exists = function(_transition_name, _source_state_name) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name(_transition_name, "transition_for_state_exists", "_transition_name");
+			self.__assert_name(_source_state_name, "transition_for_state_exists", "_source_state_name");
+		}
+		if (!SNOWSTATE_ASSUME_STRING_NAMES) {
+			_transition_name = string(_transition_name);
+			_source_state_name = string(_source_state_name);
+		}
+
+		return struct_exists(self.transitions, _transition_name) && struct_exists(self.transitions[$ _transition_name], _source_state_name);
+	};
+
+	/// @desc Fires a transition
+	/// @param {String,Array<String>} _transition_name_or_names Transition name(s) to attempt
+	/// @param {Any} [_data] Data for condition/callbacks
+	/// @returns {Bool}
+	static trigger = function(_transition_name_or_names, _data = undefined) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_name_or_names(_transition_name_or_names, "trigger", "_transition_name_or_names");
+		}
+		if (!SNOWSTATE_ASSUME_STRING_NAMES && !is_array(_transition_name_or_names)) {
+			_transition_name_or_names = string(_transition_name_or_names);
+		}
+
+		if (is_array(_transition_name_or_names)) {
+			var _transition_names_len = array_length(_transition_name_or_names);
+			for (var _i = 0; _i < _transition_names_len; ++_i) {
+				if (self.trigger(_transition_name_or_names[_i], _data)) {
+					return true;
+				}
+			}
+		} else {
+			var _transitions = self.transitions[$ _transition_name_or_names];
+
+			if (is_undefined(_transitions)) {
+				if (SNOWSTATE_SHOW_WARNING) self.__snowstate_trace($"Transition '{_transition_name_or_names}' is not defined.");
+				return false;
+			}
+
+			var _triggers = struct_get_from_hash(_transitions, self.current_state_name_hash);
+			if (self.__try_triggers(_triggers, _data)) {
+				return true;
+			}
+
+			if (struct_exists(_transitions, SNOWSTATE_WILDCARD_TRANSITION_NAME)) {
+				if (self.__try_triggers(_transitions[$ SNOWSTATE_WILDCARD_TRANSITION_NAME], _data)) {
+					return true;
+				}
+			}
+
+			var _current_state_name_hash = self.current_state_name_hash;
+            if (self.resolution_enabled) {
+    			while (struct_exists_from_hash(self.parent_state_name_hash, _current_state_name_hash)) {
+    				_current_state_name_hash = struct_get_from_hash(self.parent_state_name_hash, _current_state_name_hash);
+    				var _resolved_triggers = struct_get_from_hash(_transitions, _current_state_name_hash);
+    				if (self.__try_triggers(_resolved_triggers, _data)) {
+    					return true;
+    				}
+    			}
+            }
+		}
+
+		return false;
+	};
 
 	#endregion
-	
+
 	#region History
-	
-	/// @returns {SnowState} self
-	history_enable = function() {
-		if (!__historyEnabled) {
-			__historyEnabled = true;
-			__history_fit_contents();
-		}
-		
-		return self;
-	};
-	
-	/// @returns {SnowState} self
-	history_disable = function() {
-		if (__historyEnabled) {
-			__historyEnabled = false;
-			array_resize(__history, 2);
-		}
-		
-		return self;
-	};
-	
-	/// @returns {bool} Whether state history is enabled (true), or not (false)
-	history_is_enabled = function() {
-		return __historyEnabled;
-	};
-	
-	/// @param {int} size
-	/// @returns {SnowState} self
-	history_set_max_size = function(_size) {
-		if (!is_real(_size)) {
-			__snowstate_error("Size should be a number.");
-			return undefined;
-		}
-		if (_size < 0) {
-			if (SNOWSTATE_DEBUG_WARNING) {
-				__snowstate_trace("History size should non-negative. Setting the size to 0 instead of ", _size, ".");
+
+	/// @desc Records the current state in history
+	/// @ignore
+	/// @returns {Struct.SnowState}
+	static __history_push_current_state = function() {
+		if (self.history_max_size == 0) return self;
+
+		var _len = array_length(self.history);
+		if (_len < self.history_max_size) {
+			array_insert(self.history, 0, self.current_state_name);
+		} else {
+			for (var _i = _len-2; _i >= 0; --_i) {
+				self.history[_i+1] = self.history[_i];
 			}
-			_size = 0;
+			self.history[0] = self.current_state_name;
 		}
-		__historyMaxSize = _size;
-		__history_fit_contents();
-		
+
 		return self;
 	};
-	
-	/// @returns {int} The maximum storage capacity of state history
-	history_get_max_size = function() {
-		return __historyMaxSize;
+
+	/// @desc Returns the history array
+	/// @returns {Array<Any>} Machine's own array -- do NOT modify
+	static history_get = function() {
+		return self.history;
 	};
-	
-	/// @returns {array} Array containing the state history
-	history_get = function() {
-		if (!__historyEnabled) {
-			if (SNOWSTATE_DEBUG_WARNING) {
-				__snowstate_trace("History is disabled, can not get_history().");	
-			}
-			return [];
+
+	/// @desc Checks if history is enabled
+	/// @returns {Bool}
+	static history_get_enabled = function() {
+		return self.history_enabled;
+	};
+
+	/// @desc Returns the maximum history size
+	/// @returns {Real}
+	static history_get_max_size = function() {
+		return self.history_max_size;
+	};
+
+	/// @desc Enables or disables history
+	/// @param {Bool} _enabled Whether to enable history
+	/// @returns {Struct.SnowState}
+	static history_set_enabled = function(_enabled) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_bool(_enabled, "history_set_enabled", "_enabled");
+			_enabled = bool(_enabled);
 		}
-		if (get_previous_state() == undefined) return [__get_current_state()];
-		var _len = min(array_length(__history), __historyMaxSize);
-		var _arr = array_create(_len);
-		array_copy(_arr, 0, __history, 0, _len);
-		_arr[@ 0] = __get_current_state();
-		return _arr;
+
+		if (self.history_enabled != _enabled) {
+			self.history_enabled = _enabled;
+			if (self.history_enabled) {
+				self.__history_push_current_state();
+			} else {
+				array_resize(self.history, 0);
+			}
+		}
+		return self;
 	};
-	
+
+	/// @desc Sets the maximum history size
+	/// @param {Real} _size Maximum history size
+	/// @returns {Struct.SnowState}
+	static history_set_max_size = function(_size) {
+		if (SNOWSTATE_VERIFY_USER_ARGS) {
+			self.__assert_size(_size, "history_set_max_size", "_size");
+		}
+
+		var _prev_max_size = self.history_max_size;
+		self.history_max_size = _size;
+		var _len = array_length(self.history);
+		if (_len > _size) {
+			array_resize(self.history, _size);
+		}
+		if (self.history_enabled && (_prev_max_size == 0) && (_size > 0)) {
+			self.__history_push_current_state();
+		}
+		return self;
+	};
+
 	#endregion
-	
-	// Initialization
-	__assert_state_name_valid(_initState);
-	__history_add(_initState);
-}
-// Startup errors
-if (!is_string(SNOWSTATE_WILDCARD_TRANSITION_NAME) || (string_length(SNOWSTATE_WILDCARD_TRANSITION_NAME) != 1)) {
-	var _str = "[SnowState]\n";
-	_str += "SNOWSTATE_WILDCARD_TRANSITION_NAME should be a string of length 1."
-	_str += "\n\n\n";
-	show_error(_str, true);
+
+	#region Interfaces
+
+	/// @desc Creates an event
+	/// @param {String} _name Event name (built-in or custom)
+	/// @param {Function} _func Handler to execute
+	static Event = function(_name, _func) constructor {
+		self.name = SNOWSTATE_ASSUME_STRING_NAMES ? _name : string(_name);
+		self.func = _func;
+	};
+
+	/// @desc Holds a state's resolved events
+	/// @param {Real} _state_name_hash State name hash
+	static InheritanceTreeNode = function(_state_name_hash) constructor {
+		self.state_name_hash = _state_name_hash;
+		self.active_events = {};
+	};
+
+	/// @desc A resolved event handler
+	/// @param {Function} _func Handler to run
+	/// @param {Struct.ResolvedEvent} [_parent_resolved_event] What inherit() reaches
+	/// @param {Bool} [_is_default] Whether this is a default handler
+	static ResolvedEvent = function(_func, _parent_resolved_event, _is_default = false) constructor {
+		self.func = _func;
+		self.parent_resolved_event = _parent_resolved_event;
+		self.is_default = _is_default;
+	};
+
+	/// @desc A suspended stack frame
+	/// @param {String} _state_name Suspended state name
+	/// @param {Real} _state_name_hash Suspended state hash
+	/// @param {Real} _state_timer_in_steps Suspended step timer
+	static StackFrame = function(_state_name, _state_name_hash, _state_timer_in_steps) constructor {
+		self.state_name = _state_name;
+		self.state_name_hash = _state_name_hash;
+		self.state_timer_in_steps = _state_timer_in_steps;
+	};
+
+	/// @desc The state change broadcast payload
+	/// @param {String} _current_state_name State now active
+	/// @param {String,Undefined} _previous_state_name State active before
+	/// @param {String,Undefined} _transition_name Triggering transition, or undefined
+	/// @param {String} _change_kind Change kind (CHANGE/PUSH/POP)
+	static StateChange = function(_current_state_name, _previous_state_name, _transition_name, _change_kind) constructor {
+		self.current_state_name = _current_state_name;
+		self.previous_state_name = _previous_state_name;
+		self.transition_name = _transition_name;
+		self.change_kind = _change_kind;
+	};
+
+	/// @desc A single transition
+	/// @param {String} _transition_name Transition name
+	/// @param {String} _src_state_name Source state
+	/// @param {String} _dest_state_name Destination state (or "=" for reflexive)
+	/// @param {Function} [_condition] Condition function, or undefined
+	/// @param {Function} [_src_state_exit] Source exit callback, or undefined
+	/// @param {Function} [_dest_state_enter] Destination enter callback, or undefined
+	/// @param {Bool} [_is_push] Whether to push instead of replace
+	static Transition = function(_transition_name, _src_state_name, _dest_state_name, _condition = undefined, _src_state_exit = undefined, _dest_state_enter = undefined, _is_push = false) constructor {
+		self.transition_name = _transition_name;
+		self.src_state_name = _src_state_name;
+		self.dest_state_name = _dest_state_name;
+		self.condition = _condition;
+		self.src_state_exit = _src_state_exit;
+		self.dest_state_enter = _dest_state_enter;
+		self.is_push = _is_push;
+	};
+
+	#endregion
+
+	#region Deprecated
+
+	/// @desc Deprecated alias for add_state()
+	/// @deprecated
+	/// @ignore
+	static add = add_state;
+	/// @desc Deprecated alias for add_child_state()
+	/// @deprecated
+	/// @ignore
+	static add_child = add_child_state;
+	/// @desc Deprecated alias for change_state()
+	/// @deprecated
+	/// @ignore
+	static change = change_state;
+	/// @desc Deprecated alias for get_current_state_name()
+	/// @deprecated
+	/// @ignore
+	static get_current_state = get_current_state_name;
+	/// @desc Deprecated alias for get_previous_state_name()
+	/// @deprecated
+	/// @ignore
+	static get_previous_state = get_previous_state_name;
+	/// @desc Deprecated alias for history_set_enabled(false)
+	/// @deprecated
+	/// @ignore
+	/// @returns {Struct.SnowState}
+	static history_disable = function() { return self.history_set_enabled(false); };
+	/// @desc Deprecated alias for history_set_enabled(true)
+	/// @deprecated
+	/// @ignore
+	/// @returns {Struct.SnowState}
+	static history_enable = function() { return self.history_set_enabled(true); };
+	/// @desc Deprecated alias for history_get_enabled()
+	/// @deprecated
+	/// @ignore
+	static history_is_enabled = history_get_enabled;
+
+	#endregion
+
+	#region Removed
+
+	/// @desc Removed in v4
+	/// @ignore
+	static event_get_current_function = undefined;
+
+	#endregion
 }
 
-if (!is_string(SNOWSTATE_REFLEXIVE_TRANSITION_NAME) || (string_length(SNOWSTATE_REFLEXIVE_TRANSITION_NAME) != 1)) {
-	var _str = "[SnowState]\n";
-	_str += "SNOWSTATE_REFLEXIVE_TRANSITION_NAME should be a string of length 1."
-	_str += "\n\n\n";
-	show_error(_str, true);
-}
-
-// Some info
-#macro SNOWSTATE_VERSION "v3.1.4"
-#macro SNOWSTATE_DATE "26-10-2022"
-
-show_debug_message("[SnowState] You are using SnowState by @sohomsahaun (Version: " + string(SNOWSTATE_VERSION) + " | Date: " + string(SNOWSTATE_DATE) + ")");
+#macro SNOWSTATE_VERSION "4.0.0-alpha"
+show_debug_message($"[SnowState] You are using SnowState by @sohomsahaun (Version: {SNOWSTATE_VERSION})");

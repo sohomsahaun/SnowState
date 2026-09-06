@@ -1,0 +1,1 @@
+fsm.trigger("t_space_release");
